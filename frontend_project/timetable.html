@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Class Timetable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --dark-charcoal: #050d14;
+            --electric-blue: #00FFFF;
+            --cui-accent-green: #00B1A0;
+            --subtle-gray: #1f2937;
+        }
+
+        body {
+            background-color: var(--dark-charcoal);
+            font-family: 'Michroma', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: fadeInSlideUp .9s cubic-bezier(.25, .46, .45, .94) forwards
+        }
+
+        .delay-100 {
+            animation-delay: .1s
+        }
+
+        .delay-300 {
+            animation-delay: .3s
+        }
+
+        .delay-500 {
+            animation-delay: .5s
+        }
+
+        .delay-700 {
+            animation-delay: .7s
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 0 0 10px rgba(0, 255, 255, .55)
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 255, .95)
+            }
+
+            100% {
+                box-shadow: 0 0 10px rgba(0, 255, 255, .55)
+            }
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2.6s infinite ease-in-out
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 1rem;
+            background-image: linear-gradient(rgba(5, 13, 20, .9), rgba(5, 13, 20, .92)), url('images/b.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card {
+            background-color: var(--subtle-gray);
+            border: 3px solid var(--electric-blue);
+            border-radius: 1rem;
+            box-shadow: 0 0 15px rgba(0, 255, 255, .25);
+            width: 100%;
+            max-width: 64rem;
+        }
+
+        .inner {
+            background: #0d1117;
+            border: 1px solid #1f2937;
+            border-radius: .9rem;
+            padding: 1.25rem 1.25rem 1.5rem;
+        }
+
+        .title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 900;
+        }
+
+        .bar {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding-bottom: .65rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #1f2937;
+            color: #9ca3af;
+            font-size: .85rem
+        }
+
+        .form-row {
+            display: flex;
+            gap: .6rem;
+            flex-wrap: wrap;
+        }
+
+        .input {
+            flex: 1 1 280px;
+            background: #101721;
+            border: 1px solid #1f2937;
+            color: #e5e7eb;
+            border-radius: .65rem;
+            padding: .8rem 1rem;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s
+        }
+
+        .input::placeholder {
+            color: #6b7280
+        }
+
+        .input:focus {
+            border-color: var(--electric-blue);
+            box-shadow: 0 0 0 2px rgba(0, 255, 255, .15)
+        }
+
+        .btn {
+            background: #0b1320;
+            color: var(--electric-blue);
+            border: 2px solid var(--electric-blue);
+            border-radius: .75rem;
+            padding: .85rem 1.25rem;
+            font-weight: 700;
+            transition: transform .15s, box-shadow .2s, background-color .2s
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 255, .12);
+            box-shadow: 0 0 18px rgba(0, 255, 255, .35);
+            transform: translateY(-1px)
+        }
+
+        .btn:active {
+            transform: translateY(0)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #0f1723;
+            z-index: 1;
+        }
+
+        th,
+        td {
+            border: 1px solid #223043;
+            padding: .6rem .75rem;
+            font-size: .9rem;
+        }
+
+        th {
+            color: var(--cui-accent-green);
+            text-align: left
+        }
+
+        td {
+            color: #e5e7eb;
+        }
+
+        .table-wrap {
+            max-height: 60vh;
+            overflow: auto;
+            border: 1px solid #223043;
+            border-radius: .75rem
+        }
+
+        .hint {
+            color: #9ca3af;
+            font-size: .85rem
+        }
+
+        .not-found {
+            color: #fca5a5
+        }
+
+        /* ======== RESPONSIVE BREAKPOINTS ======== */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 3rem 1rem;
+            }
+
+            .card {
+                max-width: 95%;
+            }
+
+            .title {
+                font-size: 1.75rem;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            th,
+            td {
+                padding: 0.45rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                min-width: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                padding: 2rem 0.75rem;
+            }
+
+            .card {
+                max-width: 100%;
+            }
+
+            .inner {
+                padding: 1rem 0.85rem 1.25rem;
+            }
+
+            .title {
+                font-size: 1.4rem;
+            }
+
+            .input {
+                flex: 1 1 100%;
+                font-size: 0.9rem;
+            }
+
+            th,
+            td {
+                padding: 0.35rem 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            .hint {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .title {
+                font-size: 1.2rem;
+            }
+
+            .bar {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <section class="hero">
+        <div class="flex justify-center items-center gap-4 mb-6 animated-element delay-100">
+            <img src="images/comsats-logo.svg" alt="CUI Logo" style="width:48px;height:48px" />
+            <h1 class="title"><span style="color:#d1d5db">Class</span> <span
+                    style="color:var(--electric-blue)">Timetable</span></h1>
+        </div>
+        <div class="card animated-element delay-300 mx-auto">
+            <div class="inner">
+                <div class="bar"><span class="indicator pulse-glow"
+                        style="width:.6rem;height:.6rem;background:#00ff9d;border-radius:50%"></span><span
+                        style="color:var(--cui-accent-green)" class="font-mono">STATUS: Ready | Enter your class
+                        code</span></div>
+                <form id="tt-form" class="form-row animated-element delay-500" onsubmit="return showTimetable(event)">
+                    <input id="class-code" class="input" type="text" placeholder="e.g., BCS-FA22-7A"
+                        autocomplete="off" />
+                    <button type="submit" class="btn">Show Timetable</button>
+                </form>
+                <p class="hint mt-3">Tip: Try <code>FA22-BCS-7A</code> to see a sample.</p>
+                <div id="result" class="mt-5 animated-element delay-700" aria-live="polite"></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Demo data. Replace with real fetch when backend/endpoint is ready.
+        // Keys are uppercase class codes.
+        const timetableData = {
+            'FA22-BCS-7A': {
+                timeslots: ['08:30-10:00', '10:00-11:30', '11:30-01:00', '02:00-03:30'],
+                days: {
+                    Monday: ['Data Structures (LH-2)', 'Discrete Math (LH-5)', '', 'PE (Court)'],
+                    Tuesday: ['OS (LH-3)', '', 'DBMS Lab (Lab-1)', ''],
+                    Wednesday: ['', 'Probability (LH-4)', 'DBMS (LH-1)', ''],
+                    Thursday: ['SE (LH-2)', '', 'OS Lab (Lab-2)', ''],
+                    Friday: ['Islamic Studies (LH-1)', '', '', ''],
+                }
+            },
+            'SP25-AI-3B': {
+                timeslots: ['09:00-10:30', '10:45-12:15', '01:15-02:45', '03:00-04:30'],
+                days: {
+                    Monday: ['Linear Algebra', 'Python', '', ''],
+                    Tuesday: ['', 'DL (Lab)', '', ''],
+                    Wednesday: ['AI', '', 'Probability', ''],
+                    Thursday: ['', 'AI (Lab)', '', 'Ethics'],
+                    Friday: ['', '', '', ''],
+                }
+            }
+        };
+
+        function normalize(code) { return (code || '').trim().toUpperCase(); }
+
+        function showTimetable(e) {
+            if (e) e.preventDefault(); const codeInput = document.getElementById('class-code'); const result = document.getElementById('result'); const code = normalize(codeInput.value);
+            if (!code) { result.innerHTML = '<p class="not-found">Please enter a class code.</p>'; return false; }
+            const data = timetableData[code];
+            if (!data) { result.innerHTML = `<p class="not-found">No timetable found for <strong>${code}</strong>. Please check the code.</p>`; return false; }
+            result.innerHTML = buildTableHTML(code, data);
+            return false;
+        }
+
+        function buildTableHTML(code, data) {
+            const head = ['Day', ...data.timeslots].map(h => `<th>${h}</th>`).join('');
+            const rows = Object.keys(data.days).map(day => {
+                const cells = [day, ...data.days[day]].map(val => `<td>${val || ''}</td>`).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            return `
+            <div class="animated-element" style="animation-delay:.1s">
+                <div class="mb-3 text-sm text-gray-300">Showing timetable for <span style="color:var(--electric-blue)">${code}</span></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>${head}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        // Optional: support ?code=FA22-BCS-7A
+        (function () {
+            const params = new URLSearchParams(location.search);
+            const code = params.get('code');
+            if (code) { document.getElementById('class-code').value = code; showTimetable(); }
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Feedback</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --dark-charcoal: #050d14;
+            --electric-blue: #00FFFF;
+            --cui-primary-dark: #003D72;
+            --cui-accent-green: #00B1A0;
+            --subtle-gray: #1f2937;
+        }
+
+        body {
+            background-color: var(--dark-charcoal);
+            font-family: 'Michroma', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: fadeInSlideUp .9s cubic-bezier(.25, .46, .45, .94) forwards
+        }
+
+        .delay-100 {
+            animation-delay: .1s
+        }
+
+        .delay-300 {
+            animation-delay: .3s
+        }
+
+        .delay-500 {
+            animation-delay: .5s
+        }
+
+        .delay-700 {
+            animation-delay: .7s
+        }
+
+        /* Hero background */
+        .feedback-hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 1rem;
+            background-image: linear-gradient(rgba(5, 13, 20, .88), rgba(5, 13, 20, .92)), url('images/b.jpg');
+            background-size: cover;
+            background-position: center
+        }
+
+        /* Card */
+        .feedback-card {
+            background-color: var(--subtle-gray);
+            border: 3px solid var(--electric-blue);
+            border-radius: 1rem;
+            box-shadow: 0 0 15px rgba(0, 255, 255, .25);
+            max-width: 36rem;
+            width: 100%
+        }
+
+        .feedback-inner {
+            background: #0d1117;
+            border: 1px solid #1f2937;
+            border-radius: .9rem;
+            padding: 1.25rem 1.25rem 1.5rem
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem
+        }
+
+        .logo-mini {
+            width: 48px;
+            height: 48px
+        }
+
+        .title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 900
+        }
+
+        /* Form */
+        .form-label {
+            color: #9ca3af;
+            font-size: .85rem;
+            margin-bottom: .35rem;
+            display: block
+        }
+
+        .form-control {
+            width: 100%;
+            background: #101721;
+            border: 1px solid #1f2937;
+            color: #e5e7eb;
+            border-radius: .65rem;
+            padding: .75rem 1rem;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s
+        }
+
+        .form-control::placeholder {
+            color: #6b7280
+        }
+
+        .form-control:focus {
+            border-color: var(--electric-blue);
+            box-shadow: 0 0 0 2px rgba(0, 255, 255, .15)
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical
+        }
+
+        /* Button matches site */
+        .submit-btn {
+            display: block;
+            width: 100%;
+            font-weight: 700;
+            background: #0b1320;
+            color: var(--electric-blue);
+            border: 2px solid var(--electric-blue);
+            border-radius: .75rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 0 10px rgba(0, 255, 255, .15);
+            transition: transform .15s, box-shadow .2s, background-color .2s
+        }
+
+        .submit-btn:hover {
+            background: rgba(0, 255, 255, .12);
+            box-shadow: 0 0 18px rgba(0, 255, 255, .35);
+            transform: translateY(-1px)
+        }
+
+        .submit-btn:active {
+            transform: translateY(0)
+        }
+
+        .success {
+            display: none;
+            margin-top: .75rem;
+            color: #a7f3d0
+        }
+
+        .success.show {
+            display: block
+        }
+
+        /* ======== RESPONSIVE BREAKPOINTS ======== */
+        @media (max-width: 768px) {
+            .feedback-hero {
+                padding: 3rem 1rem;
+            }
+
+            .feedback-card {
+                max-width: 95%;
+            }
+
+            .title {
+                font-size: 1.75rem;
+            }
+
+            .logo-mini {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .feedback-hero {
+                padding: 2rem 0.75rem;
+            }
+
+            .feedback-card {
+                max-width: 100%;
+            }
+
+            .feedback-inner {
+                padding: 1rem 0.85rem 1.25rem;
+            }
+
+            .title {
+                font-size: 1.4rem;
+            }
+
+            .logo-mini {
+                width: 30px;
+                height: 30px;
+            }
+
+            .form-control {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .submit-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .title {
+                font-size: 1.2rem;
+            }
+
+            .form-label {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <section class="feedback-hero">
+        <div class="feedback-card animated-element delay-300 mx-auto">
+            <div class="feedback-inner">
+                <div class="header animated-element delay-300">
+                    <img src="images/comsats-logo.svg" alt="CUI Logo" class="logo-mini" />
+                    <h1 class="title"><span style="color:#d1d5db">Share</span> <span
+                            style="color:var(--electric-blue)">Feedback</span></h1>
+                </div>
+                <form id="feedback-form" class="space-y-5 animated-element delay-500">
+                    <div>
+                        <label for="name" class="form-label">Your Name</label>
+                        <input id="name" type="text" class="form-control" placeholder="Enter your name" required />
+                    </div>
+                    <div>
+                        <label for="email" class="form-label">Your Email</label>
+                        <input id="email" type="email" class="form-control" placeholder="Enter your email" required />
+                    </div>
+                    <div>
+                        <label for="feedback" class="form-label">Your Feedback</label>
+                        <textarea id="feedback" class="form-control" placeholder="Enter your feedback"
+                            required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Send Feedback</button>
+                    <p id="feedback-success" class="success">Thanks! Your feedback has been received.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+    <script>
+        const form = document.getElementById('feedback-form');
+        const success = document.getElementById('feedback-success');
+        form.addEventListener('submit', (e) => { e.preventDefault(); success.classList.add('show'); form.reset(); setTimeout(() => { success.classList.remove('show'); }, 3500); });
+    </script>
+</body>
+
+</html>

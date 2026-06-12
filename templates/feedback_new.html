@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Feedback</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dark-charcoal: #050d14;
+        --electric-blue: #00ffff;
+        --cui-primary-dark: #003d72;
+        --cui-accent-green: #00b1a0;
+        --subtle-gray: #1f2937;
+      }
+
+      body {
+        background-color: var(--dark-charcoal);
+        font-family: 'Inter', sans-serif;
+        color: #fff;
+        overflow-x: hidden;
+      }
+
+      @keyframes fadeInSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(25px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animated-element {
+        opacity: 0;
+        animation: fadeInSlideUp 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+      .delay-100 {
+        animation-delay: 0.1s;
+      }
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+      .delay-500 {
+        animation-delay: 0.5s;
+      }
+      .delay-700 {
+        animation-delay: 0.7s;
+      }
+
+      .feedback-hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 1rem;
+        background-image:
+          linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)),
+          url('/static/images/b.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      .feedback-card {
+        background-color: var(--subtle-gray);
+        border: 3px solid var(--electric-blue);
+        border-radius: 1rem;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+        max-width: 40rem;
+        width: 100%;
+      }
+
+      .feedback-inner {
+        background: #0d1117;
+        border: 1px solid #1f2937;
+        border-radius: 0.9rem;
+        padding: 1.25rem 1.25rem 1.5rem;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .logo-mini {
+        width: 48px;
+        height: 48px;
+      }
+
+      .title {
+        font-size: clamp(1.6rem, 4vw, 2.5rem);
+        font-weight: 900;
+      }
+
+      .form-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+        display: block;
+      }
+
+      .form-control {
+        width: 100%;
+        background: #101721;
+        border: 1px solid #1f2937;
+        color: #e5e7eb;
+        border-radius: 0.65rem;
+        padding: 0.65rem 0.85rem;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        font-size: 0.9rem;
+      }
+
+      .form-control::placeholder {
+        color: #6b7280;
+      }
+
+      .form-control:focus {
+        border-color: var(--electric-blue);
+        box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.15);
+      }
+
+      textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      select.form-control {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6.5 6.5-6.5'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2rem;
+      }
+
+      .required-star {
+        color: #f87171;
+        font-size: 0.9rem;
+      }
+
+      /* Star rating */
+      .star-rating {
+        display: flex;
+        gap: 0.35rem;
+        margin-top: 0.35rem;
+      }
+      .star-rating span {
+        font-size: 1.7rem;
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          color 0.15s;
+        user-select: none;
+      }
+      .star-rating span:hover {
+        transform: scale(1.15);
+      }
+      .star-rating span.active {
+        color: #fbbf24 !important;
+      }
+
+      /* Button */
+      .submit-btn {
+        display: block;
+        width: 100%;
+        font-weight: 700;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.75rem;
+        padding: 0.85rem 1.25rem;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          box-shadow 0.2s,
+          background-color 0.2s;
+        font-size: 1rem;
+      }
+      .submit-btn:hover {
+        background: rgba(0, 255, 255, 0.12);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+        transform: translateY(-1px);
+      }
+      .submit-btn:active {
+        transform: translateY(0);
+      }
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .msg-box {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        display: none;
+      }
+      .msg-box.success {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #a7f3d0;
+      }
+      .msg-box.error {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+      }
+      .msg-box.show {
+        display: block;
+      }
+
+      .field-error {
+        color: #f87171;
+        font-size: 0.78rem;
+        margin-top: 0.2rem;
+        display: none;
+      }
+
+      .char-count {
+        color: #6b7280;
+        font-size: 0.75rem;
+        text-align: right;
+        margin-top: 0.15rem;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 60;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        text-decoration: none;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        transition: background 0.2s;
+      }
+      .back-link:hover {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      /* Honeypot field - hidden from humans */
+      .hp-field {
+        position: absolute;
+        left: -9999px;
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .feedback-hero {
+          padding: 3.5rem 0.75rem 2rem;
+        }
+        .feedback-card {
+          max-width: 100%;
+        }
+        .feedback-inner {
+          padding: 1rem;
+        }
+        .title {
+          font-size: 1.8rem;
+        }
+        .logo-mini {
+          width: 40px;
+          height: 40px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .feedback-hero {
+          padding: 3rem 0.5rem 1.5rem;
+        }
+        .feedback-inner {
+          padding: 0.85rem;
+        }
+        .title {
+          font-size: 1.5rem;
+        }
+        .logo-mini {
+          width: 36px;
+          height: 36px;
+        }
+        .form-control {
+          padding: 0.65rem 0.85rem;
+          font-size: 0.88rem;
+        }
+        textarea.form-control {
+          min-height: 100px;
+        }
+        .submit-btn {
+          padding: 0.85rem 1rem;
+          font-size: 0.9rem;
+        }
+        .back-link {
+          top: 10px;
+          left: 10px;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+        .fb-two-col-grid {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/" class="back-link">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </a>
+
+    <section class="feedback-hero">
+      <div class="feedback-card animated-element delay-300 mx-auto">
+        <div class="feedback-inner">
+          <div class="header animated-element delay-300">
+            <img
+              src="/static/images/comsats-logo.svg"
+              alt="CUI Logo"
+              class="logo-mini"
+            />
+            <h1 class="title">
+              <span style="color: #d1d5db">Share</span>
+              <span style="color: var(--electric-blue)">Feedback</span>
+            </h1>
+          </div>
+
+          <form
+            id="feedback-form"
+            class="space-y-4 animated-element delay-500"
+            autocomplete="off"
+          >
+            <!-- Row: Name + Email -->
+            <div
+              class="fb-two-col-grid"
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+              "
+            >
+              <div>
+                <label for="fb-name" class="form-label"
+                  >Your Name
+                  <span style="color: #6b7280">(optional)</span></label
+                >
+                <input
+                  id="fb-name"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter your name"
+                  maxlength="100"
+                />
+              </div>
+              <div>
+                <label for="fb-email" class="form-label"
+                  >Email <span style="color: #6b7280">(optional)</span></label
+                >
+                <input
+                  id="fb-email"
+                  type="email"
+                  class="form-control"
+                  placeholder="your.email@example.com"
+                  maxlength="100"
+                />
+                <p class="field-error" id="err-email">
+                  Please enter a valid email address.
+                </p>
+              </div>
+            </div>
+
+            <!-- Batch / Section -->
+            <div>
+              <label for="fb-batch" class="form-label"
+                >Batch / Section <span class="required-star">*</span></label
+              >
+              <input
+                id="fb-batch"
+                type="text"
+                class="form-control"
+                placeholder="e.g. FA22-BCS-8A"
+                maxlength="30"
+                required
+              />
+              <p class="field-error" id="err-batch">
+                Please enter a valid batch code.
+              </p>
+            </div>
+
+            <!-- Row: Module + Category -->
+            <div
+              class="fb-two-col-grid"
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+              "
+            >
+              <div>
+                <label for="fb-module" class="form-label"
+                  >Module <span class="required-star">*</span></label
+                >
+                <select id="fb-module" class="form-control" required>
+                  <option value="">-- Select Module --</option>
+                  <option value="Chatbot">Chatbot</option>
+                  <option value="Timetable">Timetable</option>
+                  <option value="General">General</option>
+                </select>
+                <p class="field-error" id="err-module">
+                  Please select a module.
+                </p>
+              </div>
+              <div>
+                <label for="fb-category" class="form-label"
+                  >Category <span class="required-star">*</span></label
+                >
+                <select id="fb-category" class="form-control" required>
+                  <option value="">-- Select Category --</option>
+                  <option value="Bug Report">Bug Report</option>
+                  <option value="Suggestion">Suggestion</option>
+                  <option value="Complaint">Complaint</option>
+                  <option value="UI/UX Issue">UI/UX Issue</option>
+                  <option value="Wrong Timetable">Wrong Timetable</option>
+                  <option value="Chatbot Wrong Answer">
+                    Chatbot Wrong Answer
+                  </option>
+                  <option value="Other">Other</option>
+                </select>
+                <p class="field-error" id="err-category">
+                  Please select a category.
+                </p>
+              </div>
+            </div>
+
+            <!-- Rating -->
+            <div>
+              <label class="form-label"
+                >Rating <span class="required-star">*</span></label
+              >
+              <div class="star-rating" id="starRating">
+                <span data-r="1">☆</span>
+                <span data-r="2">☆</span>
+                <span data-r="3">☆</span>
+                <span data-r="4">☆</span>
+                <span data-r="5">☆</span>
+              </div>
+              <input type="hidden" id="fb-rating" value="" />
+              <p class="field-error" id="err-rating">Please select a rating.</p>
+            </div>
+
+            <!-- Message -->
+            <div>
+              <label for="fb-message" class="form-label"
+                >Your Feedback <span class="required-star">*</span></label
+              >
+              <textarea
+                id="fb-message"
+                class="form-control"
+                placeholder="Describe your feedback in detail (min 10 characters)..."
+                required
+                minlength="10"
+                maxlength="1000"
+              ></textarea>
+              <div class="char-count">
+                <span id="msgCharCount">0</span> / 1000
+              </div>
+              <p class="field-error" id="err-message">
+                Please enter a clear message with at least 10 characters.
+              </p>
+            </div>
+
+            <!-- Honeypot (hidden) -->
+            <div class="hp-field" aria-hidden="true">
+              <label for="website">Website</label>
+              <input
+                type="text"
+                id="fb-website"
+                name="website"
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
+            <!-- Hidden page_context -->
+            <input type="hidden" id="fb-page-context" value="" />
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+              Send Feedback
+            </button>
+
+            <div id="msg-success" class="msg-box success">
+              Thank you. Your feedback has been submitted successfully.
+            </div>
+            <div id="msg-error" class="msg-box error"></div>
+          </form>
+
+          <!-- Notice -->
+          <div
+            style="
+              margin-top: 1rem;
+              padding: 0.65rem;
+              background: rgba(0, 255, 255, 0.1);
+              border-radius: 0.5rem;
+              border: 1px solid rgba(0, 255, 255, 0.2);
+            "
+          >
+            <p
+              style="
+                color: #9ca3af;
+                font-size: 0.8rem;
+                text-align: center;
+                margin: 0;
+              "
+            >
+              💡
+              <span style="color: var(--electric-blue)"
+                >No login required!</span
+              >
+              Your feedback helps us improve the CUI Campus Bot.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // ============================================
+      // Star Rating
+      // ============================================
+      let selectedRating = 0;
+      const stars = document.querySelectorAll('#starRating span');
+
+      function renderStars(upTo) {
+        stars.forEach((s, i) => {
+          const active = i < upTo;
+          s.textContent = active ? '★' : '☆';
+          s.classList.toggle('active', active);
+        });
+      }
+
+      stars.forEach((s) => {
+        s.addEventListener('click', () => {
+          selectedRating = parseInt(s.dataset.r);
+          document.getElementById('fb-rating').value = selectedRating;
+          renderStars(selectedRating);
+          hideError('rating');
+        });
+        s.addEventListener('mouseenter', () =>
+          renderStars(parseInt(s.dataset.r)),
+        );
+        s.addEventListener('mouseleave', () => renderStars(selectedRating));
+      });
+
+      // ============================================
+      // Character counter
+      // ============================================
+      const msgArea = document.getElementById('fb-message');
+      const charCount = document.getElementById('msgCharCount');
+      msgArea.addEventListener('input', () => {
+        charCount.textContent = msgArea.value.length;
+      });
+
+      // ============================================
+      // Error helpers
+      // ============================================
+      function showError(field) {
+        const el = document.getElementById('err-' + field);
+        if (el) el.style.display = 'block';
+      }
+      function hideError(field) {
+        const el = document.getElementById('err-' + field);
+        if (el) el.style.display = 'none';
+      }
+      function hideAllErrors() {
+        document
+          .querySelectorAll('.field-error')
+          .forEach((e) => (e.style.display = 'none'));
+      }
+
+      // ============================================
+      // URL param pre-fill (for integration)
+      // ============================================
+      (function prefill() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('module')) {
+          const mod = document.getElementById('fb-module');
+          for (const opt of mod.options) {
+            if (opt.value === params.get('module')) {
+              mod.value = opt.value;
+              break;
+            }
+          }
+        }
+        if (params.get('category')) {
+          const cat = document.getElementById('fb-category');
+          for (const opt of cat.options) {
+            if (opt.value === params.get('category')) {
+              cat.value = opt.value;
+              break;
+            }
+          }
+        }
+        if (params.get('batch')) {
+          document.getElementById('fb-batch').value = params.get('batch');
+        }
+        if (params.get('page_context')) {
+          document.getElementById('fb-page-context').value =
+            params.get('page_context');
+        }
+      })();
+
+      // ============================================
+      // Form submission
+      // ============================================
+      const form = document.getElementById('feedback-form');
+      const submitBtn = document.getElementById('submitBtn');
+      const successBox = document.getElementById('msg-success');
+      const errorBox = document.getElementById('msg-error');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAllErrors();
+        successBox.classList.remove('show');
+        errorBox.classList.remove('show');
+
+        // Client-side validation
+        let hasError = false;
+
+        const batch = document.getElementById('fb-batch').value.trim();
+        if (!batch) {
+          showError('batch');
+          hasError = true;
+        }
+
+        const module = document.getElementById('fb-module').value;
+        if (!module) {
+          showError('module');
+          hasError = true;
+        }
+
+        const category = document.getElementById('fb-category').value;
+        if (!category) {
+          showError('category');
+          hasError = true;
+        }
+
+        if (!selectedRating) {
+          showError('rating');
+          hasError = true;
+        }
+
+        const message = document.getElementById('fb-message').value.trim();
+        if (!message || message.length < 10) {
+          showError('message');
+          hasError = true;
+        }
+
+        const email = document.getElementById('fb-email').value.trim();
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          showError('email');
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        // Disable button
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        const payload = {
+          name: document.getElementById('fb-name').value.trim() || '',
+          email: email || '',
+          batch_section: batch,
+          module: module,
+          category: category,
+          rating: selectedRating,
+          message: message,
+          page_context: document.getElementById('fb-page-context').value || '',
+          website: document.getElementById('fb-website').value || '', // honeypot
+        };
+
+        try {
+          const resp = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await resp.json();
+
+          if (resp.ok && result.success) {
+            successBox.textContent =
+              result.message ||
+              'Thank you. Your feedback has been submitted successfully.';
+            successBox.classList.add('show');
+            form.reset();
+            selectedRating = 0;
+            renderStars(0);
+            charCount.textContent = '0';
+          } else {
+            errorBox.textContent =
+              result.message || 'Failed to submit feedback.';
+            errorBox.classList.add('show');
+          }
+        } catch (err) {
+          errorBox.textContent = 'Network error. Please try again.';
+          errorBox.classList.add('show');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Feedback';
+        }
+      });
+    </script>
+  </body>
+</html>

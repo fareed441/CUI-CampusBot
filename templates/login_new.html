@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Login</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dark-charcoal: #050d14;
+        --electric-blue: #00ffff;
+        --cui-accent-green: #00b1a0;
+        --subtle-gray: #1f2937;
+        --error-red: #ef4444;
+        --success-green: #22c55e;
+      }
+
+      body {
+        background-color: var(--dark-charcoal);
+        font-family: 'Inter', sans-serif;
+        color: #fff;
+        overflow-x: hidden;
+      }
+
+      @keyframes fadeInSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(25px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animated-element {
+        opacity: 0;
+        animation: fadeInSlideUp 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+
+      .delay-100 {
+        animation-delay: 0.1s;
+      }
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+      .delay-500 {
+        animation-delay: 0.5s;
+      }
+
+      .login-hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 1rem;
+        background-image:
+          linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)),
+          url('/static/images/c.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      .login-card {
+        background-color: var(--subtle-gray);
+        border: 3px solid var(--electric-blue);
+        border-radius: 1rem;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+        max-width: 28rem;
+        width: 100%;
+      }
+
+      .login-inner {
+        background: #0d1117;
+        border: 1px solid #1f2937;
+        border-radius: 0.9rem;
+        padding: 1.5rem 1.5rem 2rem;
+      }
+
+      .title {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        font-weight: 900;
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+
+      .form-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+        display: block;
+      }
+
+      .form-control {
+        width: 100%;
+        background: #101721;
+        border: 1px solid #1f2937;
+        color: #e5e7eb;
+        border-radius: 0.65rem;
+        padding: 0.75rem 1rem;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .form-control::placeholder {
+        color: #6b7280;
+      }
+
+      .form-control:focus {
+        border-color: var(--electric-blue);
+        box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.15);
+      }
+
+      .submit-btn {
+        display: block;
+        width: 100%;
+        font-weight: 700;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+        transition:
+          transform 0.15s,
+          box-shadow 0.2s,
+          background-color 0.2s;
+        cursor: pointer;
+      }
+
+      .submit-btn:hover {
+        background: rgba(0, 255, 255, 0.12);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+        transform: translateY(-1px);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        display: none;
+      }
+
+      .alert-error {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid var(--error-red);
+        color: var(--error-red);
+      }
+
+      .alert-success {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid var(--success-green);
+        color: var(--success-green);
+      }
+
+      .link-text {
+        color: var(--electric-blue);
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+
+      .link-text:hover {
+        opacity: 0.8;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 60;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        text-decoration: none;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        transition: background 0.2s;
+      }
+
+      .back-link:hover {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      .tabs {
+        display: flex;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #1f2937;
+      }
+
+      .tab {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: center;
+        cursor: pointer;
+        color: #6b7280;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+      }
+
+      .tab.active {
+        color: var(--electric-blue);
+        border-bottom-color: var(--electric-blue);
+      }
+
+      .tab:hover:not(.active) {
+        color: #9ca3af;
+      }
+
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      .logo-mini {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1rem;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .login-hero {
+          padding: 3.5rem 0.75rem 2rem;
+        }
+        .login-card {
+          max-width: 100%;
+        }
+        .login-inner {
+          padding: 1.25rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .login-hero {
+          padding: 3rem 0.5rem 1.5rem;
+        }
+        .login-inner {
+          padding: 1rem;
+        }
+        .title {
+          font-size: 1.5rem;
+        }
+        .logo-mini {
+          width: 48px;
+          height: 48px;
+        }
+        .form-control {
+          padding: 0.65rem 0.85rem;
+          font-size: 0.88rem;
+        }
+        .submit-btn {
+          padding: 0.85rem 1rem;
+          font-size: 0.9rem;
+        }
+        .back-link {
+          top: 10px;
+          left: 10px;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+        .tab {
+          font-size: 0.8rem;
+          padding: 0.5rem 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/" class="back-link">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </a>
+
+    <section class="login-hero">
+      <div class="login-card animated-element delay-300 mx-auto">
+        <div class="login-inner">
+          <div class="text-center">
+            <img
+              src="/static/images/comsats-logo.svg"
+              alt="CUI Logo"
+              class="logo-mini mx-auto"
+            />
+          </div>
+
+          <h1 class="title">
+            CUI <span style="color: var(--electric-blue)">Campus Bot</span>
+          </h1>
+
+          <!-- Tabs -->
+          <div class="tabs">
+            <div class="tab active" data-tab="login">Login</div>
+            <div class="tab" data-tab="register">Register</div>
+          </div>
+
+          <!-- Alert Messages -->
+          <div id="alert-error" class="alert alert-error"></div>
+          <div id="alert-success" class="alert alert-success"></div>
+
+          <!-- Login Form -->
+          <div id="login-tab" class="tab-content active">
+            <form id="login-form" class="space-y-4">
+              <div>
+                <label for="login-username" class="form-label">Username</label>
+                <input
+                  id="login-username"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+              <div>
+                <label for="login-password" class="form-label">Password</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  class="form-control"
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+              <button type="submit" class="submit-btn" id="login-btn">
+                <span id="login-btn-text">Login</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Register Form -->
+          <div id="register-tab" class="tab-content">
+            <form id="register-form" class="space-y-4">
+              <div>
+                <label for="reg-username" class="form-label">Username</label>
+                <input
+                  id="reg-username"
+                  type="text"
+                  class="form-control"
+                  placeholder="Choose username"
+                  required
+                  minlength="3"
+                />
+              </div>
+              <div>
+                <label for="reg-email" class="form-label">Email</label>
+                <input
+                  id="reg-email"
+                  type="email"
+                  class="form-control"
+                  placeholder="your.email@cui.edu.pk"
+                  required
+                />
+              </div>
+              <div>
+                <label for="reg-password" class="form-label">Password</label>
+                <input
+                  id="reg-password"
+                  type="password"
+                  class="form-control"
+                  placeholder="Min 8 characters"
+                  required
+                  minlength="8"
+                />
+              </div>
+              <div>
+                <label for="reg-confirm" class="form-label"
+                  >Confirm Password</label
+                >
+                <input
+                  id="reg-confirm"
+                  type="password"
+                  class="form-control"
+                  placeholder="Confirm password"
+                  required
+                />
+              </div>
+              <button type="submit" class="submit-btn" id="register-btn">
+                <span id="register-btn-text">Create Account</span>
+              </button>
+            </form>
+          </div>
+
+          <p class="text-center text-gray-500 text-sm mt-4">
+            Secure authentication powered by JWT
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const API_BASE = '/api/auth';
+      const ADMIN_ROLES = ['admin', 'super_admin'];
+      const alertError = document.getElementById('alert-error');
+      const alertSuccess = document.getElementById('alert-success');
+
+      // Tab switching
+      document.querySelectorAll('.tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          document
+            .querySelectorAll('.tab')
+            .forEach((t) => t.classList.remove('active'));
+          document
+            .querySelectorAll('.tab-content')
+            .forEach((c) => c.classList.remove('active'));
+          tab.classList.add('active');
+          document
+            .getElementById(tab.dataset.tab + '-tab')
+            .classList.add('active');
+          hideAlerts();
+        });
+      });
+
+      function showError(msg) {
+        alertError.textContent = msg;
+        alertError.style.display = 'block';
+        alertSuccess.style.display = 'none';
+      }
+
+      function showSuccess(msg) {
+        alertSuccess.textContent = msg;
+        alertSuccess.style.display = 'block';
+        alertError.style.display = 'none';
+      }
+
+      function hideAlerts() {
+        alertError.style.display = 'none';
+        alertSuccess.style.display = 'none';
+      }
+
+      // Login
+      document
+        .getElementById('login-form')
+        .addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('login-btn');
+          const btnText = document.getElementById('login-btn-text');
+
+          const username = document
+            .getElementById('login-username')
+            .value.trim();
+          const password = document.getElementById('login-password').value;
+
+          btn.disabled = true;
+          btnText.textContent = 'Logging in...';
+          hideAlerts();
+
+          try {
+            const formData = new URLSearchParams();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            const response = await fetch(`${API_BASE}/token`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              // Store token and user info
+              localStorage.setItem('cui_access_token', data.access_token);
+              localStorage.setItem('cui_user', JSON.stringify(data.user));
+
+              showSuccess('Login successful! Redirecting...');
+
+              setTimeout(() => {
+                const role = data.user?.role || 'user';
+                if (ADMIN_ROLES.includes(role)) {
+                  window.location.href = '/secure-admin-portal/dashboard';
+                } else {
+                  window.location.href = '/chat';
+                }
+              }, 1000);
+            } else {
+              showError(
+                data.detail || 'Login failed. Please check your credentials.',
+              );
+            }
+          } catch (err) {
+            showError('Network error. Please try again.');
+          }
+
+          btn.disabled = false;
+          btnText.textContent = 'Login';
+        });
+
+      // Register
+      document
+        .getElementById('register-form')
+        .addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('register-btn');
+          const btnText = document.getElementById('register-btn-text');
+
+          const username = document.getElementById('reg-username').value.trim();
+          const email = document.getElementById('reg-email').value.trim();
+          const password = document.getElementById('reg-password').value;
+          const confirm = document.getElementById('reg-confirm').value;
+
+          if (password !== confirm) {
+            showError('Passwords do not match.');
+            return;
+          }
+
+          btn.disabled = true;
+          btnText.textContent = 'Creating account...';
+          hideAlerts();
+
+          try {
+            const response = await fetch(`${API_BASE}/register`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, email, password, role: 'user' }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              showSuccess('Account created! Please login.');
+              document.getElementById('register-form').reset();
+
+              // Switch to login tab
+              setTimeout(() => {
+                document.querySelector('[data-tab="login"]').click();
+                document.getElementById('login-username').value = username;
+              }, 1500);
+            } else {
+              showError(
+                data.detail || 'Registration failed. Please try again.',
+              );
+            }
+          } catch (err) {
+            showError('Network error. Please try again.');
+          }
+
+          btn.disabled = false;
+          btnText.textContent = 'Create Account';
+        });
+
+      // Check if already logged in
+      window.addEventListener('load', () => {
+        const token = localStorage.getItem('cui_access_token');
+        if (token) {
+          window.location.href = '/chat';
+        }
+      });
+    </script>
+  </body>
+</html>

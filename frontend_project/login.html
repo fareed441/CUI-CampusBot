@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Admin Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --dark-charcoal: #050d14;
+            --electric-blue: #00FFFF;
+            --cui-accent-green: #00B1A0;
+            --subtle-gray: #1f2937;
+        }
+
+        body {
+            background-color: var(--dark-charcoal);
+            font-family: 'Michroma', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: fadeInSlideUp .9s cubic-bezier(.25, .46, .45, .94) forwards
+        }
+
+        .delay-100 {
+            animation-delay: .1s
+        }
+
+        .delay-300 {
+            animation-delay: .3s
+        }
+
+        .delay-500 {
+            animation-delay: .5s
+        }
+
+        .login-hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 1rem;
+            background-image: linear-gradient(rgba(5, 13, 20, .88), rgba(5, 13, 20, .92)), url('images/c.jpg');
+            background-size: cover;
+            background-position: center
+        }
+
+        .login-card {
+            background-color: var(--subtle-gray);
+            border: 3px solid var(--electric-blue);
+            border-radius: 1rem;
+            box-shadow: 0 0 15px rgba(0, 255, 255, .25);
+            max-width: 32rem;
+            width: 100%
+        }
+
+        .login-inner {
+            background: #0d1117;
+            border: 1px solid #1f2937;
+            border-radius: .9rem;
+            padding: 1.25rem 1.25rem 1.5rem
+        }
+
+        .title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 900;
+            margin-bottom: 1rem
+        }
+
+        .form-label {
+            color: #9ca3af;
+            font-size: .85rem;
+            margin-bottom: .35rem;
+            display: block
+        }
+
+        .form-control {
+            width: 100%;
+            background: #101721;
+            border: 1px solid #1f2937;
+            color: #e5e7eb;
+            border-radius: .65rem;
+            padding: .75rem 1rem;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s
+        }
+
+        .form-control::placeholder {
+            color: #6b7280
+        }
+
+        .form-control:focus {
+            border-color: var(--electric-blue);
+            box-shadow: 0 0 0 2px rgba(0, 255, 255, .15)
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            font-weight: 700;
+            background: #0b1320;
+            color: var(--electric-blue);
+            border: 2px solid var(--electric-blue);
+            border-radius: .75rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 0 10px rgba(0, 255, 255, .15);
+            transition: transform .15s, box-shadow .2s, background-color .2s
+        }
+
+        .submit-btn:hover {
+            background: rgba(0, 255, 255, .12);
+            box-shadow: 0 0 18px rgba(0, 255, 255, .35);
+            transform: translateY(-1px)
+        }
+
+        .submit-btn:active {
+            transform: translateY(0)
+        }
+
+        .note {
+            color: #9ca3af;
+            font-size: .8rem;
+            margin-top: .5rem
+        }
+
+        .upload-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: 1.25rem;
+            border: 2px dashed rgba(0, 255, 255, .35);
+            border-radius: .9rem;
+            background: #0c131e
+        }
+
+        .upload-zone input[type=file] {
+            display: none
+        }
+
+        .upload-label {
+            cursor: pointer;
+            background: #0b1320;
+            color: var(--electric-blue);
+            border: 2px solid var(--electric-blue);
+            border-radius: .65rem;
+            padding: .6rem .9rem;
+            transition: .2s
+        }
+
+        .upload-label:hover {
+            background: rgba(0, 255, 255, .12)
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: #e5e7eb;
+            border: 1px solid #334155;
+            border-radius: .5rem;
+            padding: .4rem .7rem;
+            font-size: .85rem
+        }
+
+        .logout-btn:hover {
+            background: #111827
+        }
+
+        .hidden {
+            display: none
+        }
+
+        /* ======== RESPONSIVE BREAKPOINTS ======== */
+        @media (max-width: 768px) {
+            .login-hero {
+                padding: 3rem 1rem;
+            }
+
+            .login-card {
+                max-width: 95%;
+            }
+
+            .title {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-hero {
+                padding: 2rem 0.75rem;
+            }
+
+            .login-card {
+                max-width: 100%;
+            }
+
+            .login-inner {
+                padding: 1rem 0.85rem 1.25rem;
+            }
+
+            .title {
+                font-size: 1.4rem;
+            }
+
+            .form-control {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .submit-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .upload-zone {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .title {
+                font-size: 1.2rem;
+            }
+
+            .form-label {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <section class="login-hero">
+        <div class="login-card animated-element delay-300 mx-auto">
+            <div class="login-inner">
+                <div class="topbar hidden" id="auth-topbar">
+                    <div class="text-sm text-gray-300">Logged in</div>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                </div>
+                <h1 class="title">Admin <span style="color:var(--electric-blue)">Login</span></h1>
+                <form id="login-form" class="space-y-5 animated-element delay-300">
+                    <div>
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" type="email" class="form-control" placeholder="admin@cui.edu.pk" required />
+                    </div>
+                    <div>
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" type="password" class="form-control" placeholder="Enter password"
+                            required />
+                    </div>
+                    <button type="submit" class="submit-btn">Login</button>
+                    <p class="note">Demo only: client-side login for UI. Replace with real server auth.</p>
+                </form>
+
+                <!-- Upload area: hidden until logged in -->
+                <div id="upload-area" class="hidden animated-element delay-500">
+                    <h2 class="text-xl font-bold mb-3" style="color:var(--cui-accent-green)">Upload Knowledge Base</h2>
+                    <div class="upload-zone" id="drop-zone">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="color:var(--electric-blue)">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <label for="file-upload" class="upload-label">Choose File</label>
+                        <input id="file-upload" type="file" accept=".pdf,.doc,.docx,.csv,.txt,.json" />
+                        <div id="file-info" class="text-gray-300 text-sm">Drop a file here or click Choose File</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        const LS_KEY = 'cui_isLoggedIn';
+        const form = document.getElementById('login-form');
+        const upload = document.getElementById('upload-area');
+        const topbar = document.getElementById('auth-topbar');
+        const logoutBtn = document.getElementById('logout-btn');
+        const fileInput = document.getElementById('file-upload');
+        const fileInfo = document.getElementById('file-info');
+        const dropZone = document.getElementById('drop-zone');
+
+        function syncUI() {
+            const logged = localStorage.getItem(LS_KEY) === 'true';
+            if (logged) {
+                upload.classList.remove('hidden');
+                form.classList.add('hidden');
+                topbar.classList.remove('hidden');
+            } else {
+                upload.classList.add('hidden');
+                form.classList.remove('hidden');
+                topbar.classList.add('hidden');
+            }
+        }
+
+        // Demo auth: accept any non-empty credentials. Replace with server-side check.
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            if (email && pass) {
+                localStorage.setItem(LS_KEY, 'true');
+                syncUI();
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => { localStorage.removeItem(LS_KEY); syncUI(); });
+
+        // File UI helpers
+        fileInput && fileInput.addEventListener('change', () => {
+            fileInfo.textContent = fileInput.files?.[0]?.name || 'Drop a file here or click Choose File';
+        });
+        // Drag & drop
+        ;['dragenter', 'dragover'].forEach(evt => dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.style.borderColor = '#00FFFF'; }));
+        ;['dragleave', 'drop'].forEach(evt => dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.style.borderColor = 'rgba(0,255,255,.35)'; }));
+        dropZone.addEventListener('drop', (e) => { const dt = e.dataTransfer; if (dt && dt.files && dt.files[0]) { fileInput.files = dt.files; fileInput.dispatchEvent(new Event('change')); } });
+
+        // Initialize UI from persisted state
+        syncUI();
+    </script>
+</body>
+
+</html>

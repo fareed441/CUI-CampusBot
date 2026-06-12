@@ -1,0 +1,2178 @@
+================================================================================
+                CUI CAMPUS BOT - COMPLETE VIVA PREPARATION DOCUMENT
+================================================================================
+                  Project: CUI Campus Bot (Intelligence On Demand)
+                  University: COMSATS University Islamabad - Vehari Campus
+                  Date: March 2026
+================================================================================
+
+
+================================================================================
+  SECTION 1: PROJECT OVERVIEW
+================================================================================
+
+1.1 PROJECT NAME
+    CUI Campus Bot (CUI Campus Bot | Intelligence On Demand)
+
+1.2 PROJECT PURPOSE
+    CUI Campus Bot is a university-level intelligent campus assistant system
+    designed for COMSATS University Islamabad (CUI) Vehari Campus. Its primary
+    purpose is to provide students with instant, AI-powered answers to their
+    campus-related queries, let them view class timetables by batch code,
+    and submit feedback about campus services.
+
+    For administrators, the system provides a secure admin panel to manage
+    the chatbot knowledge base (upload/delete documents), manage timetable
+    data (manual entry, Excel/CSV upload, or automatic generation using a
+    constraint-programming solver), review and manage student feedback, and
+    control user accounts.
+
+1.3 MAJOR MODULES
+    The project consists of these main modules:
+
+    a) AI Chatbot (RAG-based Question Answering)
+       - Answers student questions using a Retrieval-Augmented Generation
+         (RAG) pipeline powered by local embeddings and cloud-based LLM.
+
+    b) Timetable System
+       - View timetable by batch code (student side)
+       - Create/edit/delete timetable entries (admin side)
+       - Upload timetable data via Excel/CSV (admin side)
+       - Automatically generate timetables using CP-SAT constraint solver (admin side)
+       - Export timetables as PDF (both sides)
+
+    c) Feedback System
+       - Students can submit module-based feedback (Chatbot/Timetable/General)
+         with category, rating, and message.
+       - Admin can view, filter, update status, and mark spam.
+
+    d) Admin Panel & Authentication
+       - JWT-based admin login with bcrypt password hashing.
+       - Forgot-password / reset-password flow via email (Gmail SMTP).
+       - Document upload to MongoDB Atlas GridFS for the knowledge base.
+       - Audit logging of all admin actions.
+
+    e) Repeater Clash Resolution (Advanced Feature)
+       - Helps repeater students find alternative course sections without
+         schedule clashes using a two-layer approach:
+         Layer-1: Fast bitmask-based filtering
+         Layer-2: CP-SAT constraint solver for multi-course optimization
+
+1.4 WHO USES THE PROJECT
+    - Students: Use the chatbot for campus queries, view timetable by batch
+      code, and submit feedback. Students do NOT need to log in.
+    - Admins: Log in via JWT authentication to manage documents, timetable
+      entries, feedback, and user accounts.
+
+1.5 STUDENT-SIDE CAPABILITIES
+    - Ask questions to the AI chatbot (English, Urdu, Roman Urdu, Auto-detect)
+    - Look up class timetable by entering batch code (e.g., FA22-BCS-8A)
+    - Download batch timetable as PDF
+    - Submit feedback about chatbot, timetable, or general campus issues
+
+1.6 ADMIN-SIDE CAPABILITIES
+    - Login with email/password (JWT token returned)
+    - Upload documents (PDF, DOCX, TXT, JSON, CSV) to knowledge base
+    - Delete documents from knowledge base
+    - Create/edit/delete timetable entries manually
+    - Upload timetable data from Excel/CSV files
+    - Generate timetables automatically using CP-SAT solver
+    - Configure rooms (add/delete/upload CSV)
+    - Export all timetables as PDF
+    - View and manage feedback (filter, update status, mark spam)
+    - View system statistics (documents, chunks, feedback count, storage)
+    - Monitor MongoDB Atlas storage usage
+    - Reset password via email link
+
+1.7 OVERALL ARCHITECTURE SUMMARY
+    The project follows a monolithic but modular architecture:
+
+    Frontend:  Jinja2 HTML templates + Tailwind CSS + vanilla JavaScript
+    Backend:   Flask web framework (primary) + FastAPI (secondary/legacy)
+    Database:  MongoDB Atlas (structured data) + ChromaDB (vector embeddings)
+    AI Layer:  BAAI BGE-M3 embeddings (local) + Groq/Perplexity LLM (cloud API)
+    Solver:    Google OR-Tools CP-SAT (timetable generation)
+
+    The Flask app (app.py) is the main entry point. It serves HTML pages,
+    handles all API endpoints, connects to MongoDB Atlas, initializes the
+    RAG pipeline, and manages authentication.
+
+
+================================================================================
+  SECTION 2: COMPLETE TECHNOLOGY STACK
+================================================================================
+
+2.1 PYTHON (Programming Language)
+    What: Python 3.x is the core programming language for the entire backend.
+    Where: Every backend file (app.py, config.py, all API modules, security,
+           solvers, data loaders, LLM integrations).
+    Why: Python has the richest ecosystem for AI/ML, NLP, and web development.
+         Libraries like LangChain, sentence-transformers, OR-Tools, Flask, and
+         PyMongo are all Python-native.
+    Suitability: Perfect for a project combining AI (embeddings, LLM), web
+                 backend, and constraint programming.
+
+2.2 FLASK (Web Framework)
+    What: Lightweight Python web framework for serving HTTP requests.
+    Where: app.py - the main application file. All routes (/api/chat,
+           /api/timetable/*, /api/feedback/*, /api/auth/*, etc.) are Flask routes.
+    Why: Flask is simple, flexible, and well-suited for a project that needs
+         both page rendering (Jinja2 templates) and JSON API endpoints.
+    Suitability: Ideal for this medium-scale project. Django would be overkill;
+                 Flask gives precise control over routing, middleware, and
+                 extension integration.
+
+2.3 FASTAPI (Secondary Web Framework)
+    What: Modern async Python web framework with automatic API documentation.
+    Where: app/ directory (app/main.py, app/routes/). Used as a secondary/
+           legacy API layer. The repeater_api uses FastAPI router patterns.
+    Why: FastAPI provides automatic OpenAPI docs, Pydantic validation, and
+         async support. It was likely used in early development.
+    Suitability: The project primarily runs on Flask. The FastAPI code provides
+                 an alternative entry point with more structured validation.
+
+2.4 MONGODB ATLAS (Cloud Database)
+    What: Cloud-hosted NoSQL document database (MongoDB's managed service).
+    Where: All structured data storage - users, feedback, timetable entries,
+           timetable offerings, documents metadata, password reset tokens,
+           audit logs, rooms configuration, generation metadata.
+    Why: MongoDB's flexible document schema suits the varied data shapes
+         (feedback documents, timetable entries, user records). Atlas provides
+         free-tier cloud hosting with SSL encryption.
+    Suitability: Excellent for this project. Schema-less design means you can
+                 store different document shapes without migrations. GridFS
+                 support enables file storage for the knowledge base.
+    Collections used:
+       - users (admin accounts)
+       - documents (knowledge base document metadata)
+       - feedback (student submissions)
+       - timetable_entries (scheduled classes)
+       - timetable_offerings (course offerings for generator)
+       - timetable_rooms (room configuration)
+       - timetable_meta (generation metadata)
+       - password_reset_tokens (forgot-password tokens)
+       - audit_log (admin action records)
+       - fs.files + fs.chunks (GridFS file storage)
+
+2.5 MONGODB GRIDFS (File Storage)
+    What: MongoDB's specification for storing large files by splitting them
+          into chunks in the database.
+    Where: Document upload/download in admin panel. Files are stored as
+           GridFS objects and their metadata is tracked in the documents
+           collection.
+    Why: Keeps all data in one place (MongoDB Atlas). No need for separate
+         file storage like S3. The free tier of Atlas (512 MB) is sufficient
+         for a university chatbot's knowledge base documents.
+    Suitability: Good for moderate-sized files (PDFs, DOCX). The project
+                 monitors storage usage to stay within the 512 MB free tier.
+
+2.6 CHROMADB (Vector Database)
+    What: Open-source embedding database for similarity search. Stores
+          vector embeddings of text chunks for semantic retrieval.
+    Where: chroma_db/ directory. Used by vector_store_free.py via LangChain's
+           Chroma integration. The chatbot retrieves relevant document chunks
+           by comparing query embeddings with stored document embeddings.
+    Why: ChromaDB is lightweight, runs locally, persists to disk, and
+         integrates seamlessly with LangChain. No cloud API or cost.
+    Suitability: Perfect for a project that needs fast semantic search without
+                 cloud dependency. The local persistence means embeddings
+                 survive server restarts without re-indexing.
+
+2.7 LANGCHAIN (AI Orchestration Framework)
+    What: Framework for building LLM-powered applications. Provides
+          abstractions for document loading, text splitting, embeddings,
+          vector stores, and retrieval chains.
+    Where: Used across the RAG pipeline:
+           - langchain_core.documents.Document (data representation)
+           - langchain_text_splitters.RecursiveCharacterTextSplitter (chunking)
+           - langchain_chroma.Chroma (vector store wrapper)
+           - langchain_huggingface.HuggingFaceEmbeddings (embedding model)
+           - langchain_community.document_loaders (PDF, CSV, text loaders)
+    Why: LangChain standardizes the RAG pipeline components, making it easy
+         to swap embedding models, vector stores, or LLM providers.
+    Suitability: Industry-standard for RAG applications. Saves significant
+                 development effort on document processing and retrieval.
+
+2.8 BAAI BGE-M3 (Embedding Model)
+    What: BAAI/bge-m3 is a multilingual Dense embedding model by the
+          Beijing Academy of Artificial Intelligence. It supports 100+
+          languages including English, Urdu, and Roman Urdu.
+    Where: vector_store_free.py - initialized as HuggingFaceEmbeddings with
+           model_name="BAAI/bge-m3".
+    Why: (a) Runs completely locally on CPU - no API key, no cost, unlimited.
+         (b) Supports multilingual queries - students can ask in English,
+             Urdu script, or Roman Urdu.
+         (c) High-quality embeddings (state-of-the-art on MTEB benchmark).
+    Suitability: Ideal for a Pakistani university chatbot where students may
+                 type in any of English, Urdu, or Roman Urdu. The local
+                 execution eliminates API quotas and costs.
+    Model size: ~2.3 GB (downloaded once, cached locally in .hf_cache/).
+    Embedding dimension: 1024-dimensional dense vectors.
+    Normalization: Embeddings are L2-normalized (encode_kwargs={'normalize_embeddings': True}).
+
+2.9 GROQ LLM (Primary Language Model)
+    What: Cloud-based LLM inference service using Groq hardware. The project
+          uses the llama-3.3-70b-versatile model by default.
+    Where: groq_llm.py - GroqLLM class wraps the Groq Python SDK.
+           Used as the default LLM provider (LLM_PROVIDER="groq" in config).
+    Why: Groq provides extremely fast inference for open-source models.
+         The Llama 3.3 70B model offers GPT-4-class quality at much lower cost.
+    Suitability: Excellent for a university chatbot - fast response times,
+                 free/affordable API tier, and high-quality answers.
+    Configuration: Temperature=0.7, Max tokens=1024, Max retries=3.
+
+2.10 PERPLEXITY LLM (Alternative Language Model)
+     What: Cloud-based LLM service with built-in search capabilities.
+           Uses models like sonar, sonar-pro, sonar-reasoning.
+     Where: perplexity_llm.py - PerplexityLLM class uses the Perplexity
+            chat/completions API endpoint.
+     Why: Provides an alternative LLM backend. Can be swapped via
+          LLM_PROVIDER environment variable.
+     Configuration: Temperature=0.3, Max retries=5, Timeout=30s.
+
+2.11 SENTENCE-TRANSFORMERS (ML Library)
+     What: Python library for computing text embeddings using transformer models.
+     Where: Dependency of langchain_huggingface.HuggingFaceEmbeddings.
+            Loads and runs the BAAI/bge-m3 model locally.
+     Why: Provides the inference engine for the embedding model.
+     Suitability: Standard library for running HuggingFace embedding models.
+
+2.12 GOOGLE OR-TOOLS CP-SAT SOLVER (Constraint Programming)
+     What: Google's operations research library. The CP-SAT (Constraint
+           Programming - Satisfiability) solver finds optimal solutions
+           to constraint satisfaction problems.
+     Where: timetable_generator/cpsat_generator.py - TimetableGenerator class.
+            solver/layer2_cpsat.py - RepeaterSolver class.
+     Why: Timetable generation is a classic constraint satisfaction problem
+          (no teacher clashes, no batch clashes, no room clashes). CP-SAT
+          efficiently finds optimal or feasible solutions.
+     Suitability: Industry-standard for scheduling problems. Much more
+                  reliable than greedy or heuristic approaches for
+                  university timetable generation.
+     Hard constraints: No teacher/batch/room overlap, lab consecutive slots
+     Soft constraints: Minimize gaps, minimize late slots, spread across days
+
+2.13 JWT (JSON Web Tokens)
+     What: Standard for creating digitally signed access tokens.
+     Where: app.py - create_access_token(), verify_token() functions.
+            Used for admin authentication (Bearer token in API headers).
+     Why: Stateless authentication - the server doesn't need to store
+          session data. Each request carries its own authentication proof.
+     Suitability: Standard approach for API authentication. Works well with
+                  the single-page admin dashboard that makes AJAX calls.
+     Algorithm: HS256 (HMAC with SHA-256)
+     Token contents: username (sub), role, department, expiry (exp), issued at (iat)
+     Default expiry: 60 minutes (configurable via ACCESS_TOKEN_EXPIRE_MINUTES)
+
+2.14 BCRYPT (Password Hashing)
+     What: Adaptive password hashing function designed to be computationally
+           expensive, making brute-force attacks impractical.
+     Where: Password hashing during admin user creation and password reset.
+            Password verification during login.
+     Why: Bcrypt automatically handles salt generation and is intentionally
+          slow (to prevent cracking). Much more secure than SHA-256 or MD5.
+     Suitability: Industry-standard for password storage. The adaptive
+                  cost factor means it remains secure as hardware improves.
+
+2.15 GMAIL SMTP (Email Service)
+     What: Gmail's SMTP server used for sending transactional emails.
+     Where: security/email_service.py - send_reset_email() function.
+            Uses smtplib with TLS encryption.
+     Why: Provides reliable email delivery for password reset links.
+          Gmail is free and widely trusted.
+     Configuration: Server=smtp.gmail.com, Port=587, TLS=true.
+                    Requires Gmail App Password (16-char).
+
+2.16 TAILWIND CSS (Frontend Styling)
+     What: Utility-first CSS framework loaded via CDN.
+     Where: All HTML templates use Tailwind classes for layout, spacing,
+            colors, and responsive design.
+     Why: Enables rapid UI development with consistent styling without
+          writing custom CSS. Utility classes make responsive design easy.
+
+2.17 VANILLA JAVASCRIPT (Frontend Logic)
+     What: Plain JavaScript (no React/Vue/Angular framework).
+     Where: Embedded in HTML templates via <script> tags. Handles form
+            submissions, API calls via fetch(), DOM manipulation, and
+            dynamic UI updates.
+     Why: Keeps the frontend lightweight and simple. No build step needed.
+
+2.18 JINJA2 (Template Engine)
+     What: Python template engine used by Flask to render HTML pages.
+     Where: All files in templates/ directory. Flask's render_template()
+            function renders these.
+     Why: Allows server-side HTML rendering with dynamic data. Built
+          into Flask.
+
+2.19 REPORTLAB (PDF Generation)
+     What: Python library for creating PDF documents programmatically.
+     Where: renderer/pdf_renderer.py - TimetablePDFRenderer class.
+            Generates timetable PDFs matching the official CUI format.
+     Why: Allows exporting timetables as professional PDF documents
+          with proper formatting, merged cells, and styled tables.
+
+2.20 PANDAS / OPENPYXL (Data Processing)
+     What: Pandas for data manipulation, openpyxl for Excel file reading.
+     Where: Timetable Excel/CSV upload endpoints. CSV parsing in
+            timetable_generator/csv_parser.py.
+     Why: Enables bulk timetable data import from spreadsheets.
+
+2.21 FLASK-LIMITER (Rate Limiting)
+     What: Flask extension for rate limiting API endpoints.
+     Where: app.py - applied to login (5/min), forgot-password (3/15min),
+            feedback (3/10min), reset-password (5/15min).
+     Why: Prevents brute-force attacks on login, spam on feedback,
+          and abuse of password reset functionality.
+
+2.22 FLASK-CORS (Cross-Origin Resource Sharing)
+     What: Flask extension to handle CORS headers.
+     Where: app.py - CORS configured for /api/* routes.
+     Why: Allows the frontend to make API calls from different origins
+          during development.
+
+2.23 PYPDF / PDFPLUMBER (PDF Reading)
+     What: Libraries for extracting text from PDF files.
+     Where: load_cui_data.py and data_loader.py - loading PDF documents
+            into the RAG pipeline for chunking and embedding.
+     Why: The knowledge base may contain PDF documents (fee structures,
+          regulations, timetables) that need text extraction.
+
+2.24 PYTHON-DOCX (DOCX Reading)
+     What: Library for reading Microsoft Word documents.
+     Where: load_cui_data.py - _process_docx_content() and load_docx_file().
+     Why: Supports Word document uploads to the knowledge base.
+
+2.25 CERTIFI (SSL Certificates)
+     What: Provides Mozilla's CA Bundle for SSL/TLS verification.
+     Where: MongoDB Atlas connection uses tlsCAFile=certifi.where() for
+            secure SSL connections.
+     Why: Ensures secure encrypted connections to MongoDB Atlas cloud.
+
+2.26 PYTHON-DOTENV (Environment Variables)
+     What: Loads environment variables from a .env file.
+     Where: app.py (first line), config.py - loads API keys, database URIs,
+            and configuration settings.
+     Why: Keeps sensitive credentials (API keys, database passwords) out
+          of source code.
+
+
+================================================================================
+  SECTION 3: COMPLETE FOLDER / FILE UNDERSTANDING
+================================================================================
+
+3.1 PROJECT ROOT FILES
+
+    app.py (2303 lines) - THE MAIN ENTRY POINT
+        The primary Flask application. Contains:
+        - Flask app initialization and configuration
+        - MongoDB connection setup (connect_mongodb())
+        - RAG pipeline initialization (initialize_rag())
+        - JWT authentication functions (create_access_token, verify_token)
+        - Authentication decorators (token_required, admin_required, require_role)
+        - Security headers middleware (@app.after_request)
+        - Rate limiting configuration
+        - All API routes:
+          * Authentication: /api/auth/token, /api/auth/me
+          * Password reset: /api/auth/forgot-password, /api/auth/reset-password
+          * Chat: /api/chat, /api/clear, /api/status, /api/suggestions
+          * Documents: /api/documents/upload, /api/documents (GET/DELETE)
+          * Feedback: /api/feedback/* (via Blueprint + legacy routes)
+          * Timetable: /api/timetable/batches, /api/timetable/batch/<code>
+          * Timetable admin: /api/timetable/entry (CRUD), /api/uploads/timetable-excel
+          * Timetable generator: /api/timetable/generate, /api/admin/upload_offerings
+          * Rooms: /api/admin/rooms (CRUD)
+          * Stats: /api/stats, /api/atlas-storage
+          * PDF exports: /api/timetable/batch/<code>/pdf, /api/timetable/export/all.pdf
+        - Page routes: /, /chat, /timetable, /feedback, /login, /admin, etc.
+
+    config.py (328 lines)
+        All configuration parameters:
+        - LLM provider selection (Groq/Perplexity)
+        - Groq and Perplexity API settings
+        - Data directory path, chunk size (1000), chunk overlap (200)
+        - ChromaDB settings (directory, collection name)
+        - RAG settings (top_k=5, search_type=similarity)
+        - System prompts in 4 languages (English, Urdu, Roman Urdu, Auto-detect)
+        - Language instruction suffixes
+        - Urdu script detection function
+        - Transliteration prompt template
+
+    data_loader.py (241 lines)
+        Generic document loader supporting TXT, PDF, CSV, Markdown files.
+        Uses LangChain document loaders and RecursiveCharacterTextSplitter.
+
+    load_cui_data.py (773 lines)
+        CUI-specific data loader with:
+        - TextChunker class with multiple strategies (recursive, sentence,
+          paragraph, context-aware, smart Q&A chunking)
+        - CUIDataLoader class that loads from MongoDB GridFS (primary)
+          or local directory (fallback)
+        - Processes JSON Q&A files, PDFs, DOCX, TXT files
+        - Handles byte-level content from GridFS
+
+    rag_pipeline_free.py (335 lines)
+        The complete RAG pipeline orchestrator:
+        - Initializes data loader, vector store, and LLM
+        - index_data(): loads documents, creates embeddings, stores in ChromaDB
+        - retrieve_context(): semantic similarity search
+        - generate_response(): sends context + query to LLM
+        - query(): complete RAG query (retrieve + generate)
+        - ensure_retriever(): startup optimization for existing embeddings
+
+    vector_store_free.py (335 lines)
+        ChromaDB vector store manager:
+        - Initializes BAAI BGE-M3 embeddings (HuggingFaceEmbeddings)
+        - Creates/loads ChromaDB collections
+        - add_documents(): batch embedding and storage
+        - similarity_search() and similarity_search_with_score()
+        - get_retriever(): returns LangChain retriever for RAG
+        - reset_collection(), delete_collection()
+
+    groq_llm.py (329 lines)
+        Groq LLM integration:
+        - GroqLLM class wrapping the Groq Python SDK
+        - generate_response(): simple prompt-based generation
+        - generate_response_with_context(): RAG-style with context documents
+        - generate_chat_response(): multi-turn with conversation history
+        - Roman Urdu transliteration support
+        - Retry logic with exponential backoff
+
+    perplexity_llm.py (257 lines)
+        Perplexity LLM integration:
+        - PerplexityLLM class using REST API
+        - Same interface as GroqLLM (response, context, chat)
+        - HTTP-based API calls with retry logic
+        - Roman Urdu support
+
+3.2 api/ DIRECTORY
+
+    feedback_api.py (548 lines)
+        Flask Blueprint for feedback system:
+        - Public: POST /api/feedback (submit with validation)
+        - Admin: GET /api/admin/feedback (filtered list with aggregation)
+        - Admin: GET /api/admin/feedback/<id> (detail)
+        - Admin: PUT /api/admin/feedback/<id>/status (update status)
+        - Admin: PUT /api/admin/feedback/<id>/spam (toggle spam)
+        - Input validation, honeypot anti-spam, duplicate detection
+
+    mongodb_timetable.py (463 lines)
+        MongoDB timetable data store:
+        - MongoDBTimetableStore singleton class
+        - CRUD for timetable entries
+        - Batch code normalization
+        - Slot time mappings (6 slots: 8:30-10:00 through 4:30-6:00)
+        - Formatted retrieval for UI display
+
+    timetable_generator_api.py (843 lines)
+        Timetable generation API:
+        - Upload offerings CSV
+        - Upload rooms CSV
+        - Generate timetable using CP-SAT solver
+        - Store results in MongoDB
+        - Export to PDF
+
+    repeater_api.py (323 lines)
+        FastAPI router for repeater clash resolution:
+        - Layer-1 fast suggestions
+        - Layer-2 CP-SAT solving
+        - Student schedule management
+
+    data_store.py (314 lines)
+        In-memory data store with demo data:
+        - 12 courses, 8 teachers, 8 rooms, 4 batches, 3 students
+        - Thread-safe singleton with indexes
+
+3.3 security/ DIRECTORY
+
+    input_validation.py (336 lines)
+        - validate_email(), validate_password(), validate_batch_code()
+        - validate_feedback(), validate_file_upload(), validate_timetable_entry()
+        - validate_chat_message(), validate_role()
+        - sanitize_string(), sanitize_search_query()
+        - Common password blacklist (from file + hardcoded)
+
+    password_reset.py (233 lines)
+        - create_reset_token(): generates URL-safe token, stores SHA-256 hash
+        - verify_and_reset_password(): validates token, updates password
+        - validate_reset_token(): checks without consuming
+
+    email_service.py (~160 lines)
+        - send_reset_email(): SMTP email with HTML + plain text body
+        - Branded HTML email template matching project design
+
+    audit_log.py (~160 lines)
+        - AuditLogger class storing events in MongoDB audit_log collection
+        - Convenience methods for all auditable actions
+
+3.4 timetable_generator/ DIRECTORY
+
+    csv_parser.py (341 lines) - Parse CSV/Excel to ClassSession objects
+    cpsat_generator.py (625 lines) - CP-SAT solver for timetable generation
+    clash_checker.py (168 lines) - Post-generation clash verification
+    output_generator.py (714 lines) - PDF/HTML/Excel output generation
+
+3.5 timetable_core/ DIRECTORY
+
+    models.py (366 lines) - Domain models (Course, Teacher, Room, Offering, etc.)
+    bitmask.py (313 lines) - 30-bit bitmask operations for O(1) clash detection
+    fuzzy_match.py (~280 lines) - Fuzzy course name matching
+
+3.6 solver/ DIRECTORY
+
+    layer1_suggest.py (302 lines) - Fast-path alternative offering suggestion
+    layer2_cpsat.py (404 lines) - CP-SAT multi-course repeater resolution
+
+3.7 renderer/ DIRECTORY
+
+    pdf_renderer.py (743 lines) - PDF timetable rendering (CUI format)
+    html_renderer.py (615 lines) - HTML timetable rendering (CUI format)
+
+3.8 templates/ DIRECTORY (13 files)
+
+    index.html - Landing page with module cards
+    chat.html - AI chatbot interface with language selection
+    timetable.html - Timetable viewer (batch code lookup)
+    feedback_new.html - Module-based feedback form
+    login.html / login_new.html - Admin login pages
+    admin.html - Admin dashboard (documents, timetable, feedback, stats)
+    forgot_password.html - Password reset request form
+    reset_password.html - New password entry form
+    knowledge_base.html - Redirects to admin dashboard
+    repeater_admin.html - Repeater clash resolver interface
+    chat_new.html - Alternative chat interface
+    feedback.html - Legacy feedback form
+
+3.9 HOW FILES CONNECT
+
+    Startup Flow:
+    app.py imports config.py for settings
+    app.py calls connect_mongodb() to establish MongoDB Atlas connection
+    app.py calls initialize_rag() which creates FreeRAGPipeline
+    FreeRAGPipeline (rag_pipeline_free.py) creates:
+      - CUIDataLoader (load_cui_data.py) for document loading
+      - FreeVectorStoreManager (vector_store_free.py) for embeddings + ChromaDB
+      - GroqLLM or PerplexityLLM for text generation
+    If ChromaDB already has data, it reuses saved embeddings (no re-indexing)
+    If empty, it loads documents from MongoDB GridFS and indexes them
+
+    Chat Flow:
+    Frontend (chat.html) -> fetch('/api/chat') -> app.py chat route
+    -> rag_pipeline.query() -> retrieve_context() + generate_response()
+    -> response returned as JSON
+
+    Timetable Flow:
+    Frontend (timetable.html) -> fetch('/api/timetable/batch/<code>')
+    -> MongoDBTimetableStore.get_batch_timetable() -> JSON response
+
+    Admin Flow:
+    Frontend (login.html) -> fetch('/api/auth/token') -> JWT returned
+    -> Admin dashboard uses JWT in Authorization header for API calls
+
+
+================================================================================
+  SECTION 4: CHATBOT MODULE - COMPLETE STEP BY STEP
+================================================================================
+
+This is the most complex and important module in the project. Here is the
+complete flow from initialization to final answer output.
+
+4.1 INITIALIZATION SEQUENCE
+
+    When app.py starts, it follows this exact sequence:
+
+    Step 1: Load environment variables (.env file via python-dotenv)
+    Step 2: Import all modules (Flask, security, RAG pipeline, etc.)
+    Step 3: Create Flask app with secret key
+    Step 4: Configure CORS, rate limiter, JWT settings
+    Step 5: Call connect_mongodb() to connect to MongoDB Atlas
+    Step 6: Call initialize_rag() which creates FreeRAGPipeline
+
+    The FreeRAGPipeline.__init__() does:
+    Substep A: Create CUIDataLoader (chunk_size=1000, chunk_overlap=200)
+    Substep B: Create FreeVectorStoreManager (loads BAAI/bge-m3 model)
+    Substep C: Create GroqLLM or PerplexityLLM (based on LLM_PROVIDER config)
+
+4.2 EMBEDDING MODEL LOADING
+
+    FreeVectorStoreManager.__init__() (vector_store_free.py):
+    - Sets HF_HOME and TRANSFORMERS_CACHE to .hf_cache/ directory
+    - Creates HuggingFaceEmbeddings instance:
+        model_name = "BAAI/bge-m3"
+        model_kwargs = {'device': 'cpu'}
+        encode_kwargs = {'normalize_embeddings': True}
+        cache_folder = ".hf_cache"
+    - FIRST RUN: Downloads ~2.3 GB model from HuggingFace Hub
+    - SUBSEQUENT RUNS: Loads from local cache (fast startup)
+    - The model runs entirely on CPU (no GPU required)
+    - Then initializes ChromaDB collection (loads existing or creates new)
+
+4.3 DATA / DOCUMENT LOADING
+
+    When the system needs to index data (first run or force reindex):
+
+    CUIDataLoader.load_all_data() is called with mongo_db and mongo_gridfs.
+
+    Priority 1: MongoDB GridFS (Primary Source)
+    - Iterates over all files stored in GridFS
+    - For each file, determines type by extension:
+      * .pdf -> PyPDFLoader to extract text from each page
+      * .docx -> python-docx to extract paragraph text
+      * .txt -> Direct UTF-8 text extraction
+      * .json -> Parse as Q&A pairs (question/answer format)
+    - Each file's content is split into chunks
+
+    Priority 2: Local Directory (Fallback)
+    - Only used if MongoDB GridFS is not available
+    - Reads from cui_chatbot_data/ directory
+    - Same processing for JSON, PDF, DOCX, TXT files
+
+4.4 CHUNKING IN DETAIL
+
+    Text Chunking Strategy:
+    The project uses RecursiveCharacterTextSplitter from LangChain.
+
+    Parameters:
+    - chunk_size = 1000 characters (maximum size per chunk)
+    - chunk_overlap = 200 characters (overlap between consecutive chunks)
+    - separators = ["\n\n", "\n", " ", ""] (in priority order)
+
+    How RecursiveCharacterTextSplitter works:
+    1. First tries to split by double newlines (\n\n) - paragraph boundaries
+    2. If chunks are still too large, splits by single newlines (\n)
+    3. If still too large, splits by spaces
+    4. Last resort: character-by-character split
+
+    Why overlap of 200 characters?
+    Overlap ensures that context is not lost at chunk boundaries. If a relevant
+    answer spans two chunks, the overlap region ensures at least some context
+    is preserved in both chunks.
+
+    Smart Q&A Chunking (for JSON files):
+    The TextChunker.smart_chunk_qna() method handles Q&A pairs specially:
+    - If question + answer fits in one chunk (<=1000 chars), keeps together
+    - If answer is long, splits the answer but prefixes each chunk with
+      the question for context continuity:
+      Chunk 1: "Question: {Q}\n\nAnswer: {A_part1}"
+      Chunk 2: "Question: {Q} (continued)\n\nAnswer: {A_part2}"
+
+    Each chunk gets metadata:
+    - source: filename
+    - category: topic category (from JSON) or "General"
+    - type: "qna", "pdf", "txt", "docx"
+    - chunk_id: position in the document
+
+4.5 EMBEDDINGS GENERATION
+
+    After documents are loaded and chunked, the FreeVectorStoreManager
+    creates embeddings:
+
+    vector_store.add_documents(documents, batch_size=50):
+    1. Creates a Chroma collection with the BAAI BGE-M3 embedding function
+    2. Processes documents in batches of 50
+    3. For each batch:
+       a. The embedding model converts each chunk's text into a 1024-dimensional
+          dense vector
+       b. The vectors are normalized (L2 normalization)
+       c. The vectors + text + metadata are stored in ChromaDB
+    4. ChromaDB persists to disk (chroma_db/ directory)
+
+    Why BAAI BGE-M3?
+    - Multilingual: supports English, Urdu, Arabic, Roman Urdu, and 100+ languages
+    - High quality: state-of-the-art on multilingual benchmarks
+    - Free: runs locally, no API costs, unlimited usage
+    - No quotas: unlike OpenAI or Google embedding APIs that have rate limits
+
+4.6 CHROMADB STORAGE
+
+    ChromaDB stores:
+    - The original text of each chunk
+    - The 1024-dimensional embedding vector
+    - Metadata (source, category, type, chunk_id)
+
+    Configuration:
+    - Collection name: "cui_campus_bot"
+    - Persist directory: "chroma_db/"
+    - Settings: anonymized_telemetry=False, allow_reset=True, is_persistent=True
+
+    Startup optimization:
+    When the app restarts, it checks if ChromaDB already has documents:
+    - If yes: reuses saved embeddings (NO re-indexing, NO re-embedding)
+    - If no: performs full indexing from MongoDB GridFS
+    This saves significant startup time (embedding 2.3GB model + processing
+    all documents would take minutes otherwise).
+
+4.7 QUERY PROCESSING (When a Student Asks a Question)
+
+    Step 1: Frontend sends POST /api/chat with:
+    {
+        "message": "What is the fee structure?",
+        "preferred_language": "en"
+    }
+
+    Step 2: app.py chat() route receives the request
+    - Validates message (non-empty)
+    - Gets conversation history from Flask session
+    - Selects the language-specific system prompt
+
+    Step 3: RAG Pipeline query() is called
+    - rag_pipeline.query(question, system_prompt, conversation_history, ...)
+
+    Step 4: RETRIEVAL - Context documents are retrieved
+    - rag_pipeline.retrieve_context(question, k=5)
+    - The question is converted to a 1024-dim vector using BGE-M3
+    - ChromaDB performs similarity search (cosine similarity)
+    - The top 5 most similar chunks are returned
+    - These chunks contain information relevant to the question
+
+    Step 5: GENERATION - LLM generates the answer
+    - rag_pipeline.generate_response(query, context_documents, ...)
+    - The LLM (Groq/Perplexity) receives:
+      a. System prompt (defines CUI Campus Bot behavior + rules)
+      b. Conversation history (last 6 turns for context)
+      c. Context documents (top 5 retrieved chunks)
+      d. User question
+      e. Language instruction (enforce response language)
+
+    The prompt sent to the LLM looks like:
+    --------------------------------------------------------
+    System: [System prompt for CUI Campus Bot with rules]
+
+    [Previous conversation turns if any]
+
+    User: Based on the following information from CUI Vehari Campus database:
+
+    [Context chunk 1]
+    ---
+    [Context chunk 2]
+    ---
+    [Context chunk 3]
+    ...
+
+    User Question: What is the fee structure?
+
+    Provide an accurate answer using the information above.
+    [IMPORTANT: Reply ONLY in English.]
+    --------------------------------------------------------
+
+    Step 6: LLM generates answer based on retrieved context
+
+    Step 7: Post-processing
+    - _strip_markdown(): removes Markdown formatting (**, #, backticks)
+    - Removes citation markers like [1], [2]
+    - For Roman Urdu mode: checks output for Urdu script and transliterates
+      if necessary
+
+    Step 8: Response returned to frontend
+    {
+        "success": true,
+        "answer": "The fee structure at CUI Vehari Campus...",
+        "sources": ["fee_structure.json"],
+        "categories": ["Fees"],
+        "language": "en",
+        "timestamp": "2026-03-08T..."
+    }
+
+    Step 9: Conversation history updated
+    - The Q&A pair is added to session history
+    - History is capped at 10 turns (oldest removed)
+    - History enables multi-turn conversations
+
+4.8 MULTILINGUAL SUPPORT
+
+    The chatbot supports 4 language modes:
+
+    a) English (en): Response in English only
+    b) Urdu (ur): Response in Urdu script
+    c) Roman Urdu (roman): Response in Roman Urdu (Latin letters)
+    d) Auto-detect (auto): Detects user language and responds accordingly
+
+    For Roman Urdu mode:
+    If the LLM accidentally responds in Urdu script, the system detects it
+    using a Unicode pattern (checking for Arabic/Urdu characters U+0600-U+06FF)
+    and automatically transliterates it to Roman Urdu by sending a follow-up
+    LLM request with a transliteration prompt.
+
+4.9 CONVERSATION HISTORY
+
+    The project maintains per-session conversation history using Flask sessions:
+    - Each Q&A pair is stored in session['conversation_history']
+    - Maximum 10 turns (configurable via MAX_CONVERSATION_HISTORY)
+    - When generating a new response, the last 6 turns are included in the
+      LLM prompt, allowing the chatbot to understand follow-up questions
+    - Session is cleared via POST /api/clear
+
+4.10 ERROR HANDLING IN CHATBOT
+
+    - If RAG pipeline is not initialized: returns 503 with instructions
+    - If no API key is configured: returns 503 with setup instructions
+    - If LLM API call fails: retries with exponential backoff (2s, 4s, 6s)
+    - If no context documents found: LLM handles conversationally
+      (responds to greetings, offers help for CUI queries)
+    - If transliteration fails: returns original text (graceful degradation)
+    - Network errors: caught and returned as user-friendly messages
+
+4.11 REINDEXING
+
+    Admin can trigger reindexing in two ways:
+    a) POST /api/reload - reinitializes the entire RAG pipeline
+    b) When a document is uploaded or deleted, force_reindex=True triggers
+       a complete rebuild of the ChromaDB collection
+
+    Reindexing process:
+    1. Delete existing ChromaDB collection (without reloading embedding model)
+    2. Load all documents from MongoDB GridFS
+    3. Chunk all documents
+    4. Generate new embeddings for all chunks
+    5. Store in fresh ChromaDB collection
+    6. Initialize new retriever
+
+
+================================================================================
+  SECTION 5: DATABASES USED IN PROJECT
+================================================================================
+
+5.1 MONGODB ATLAS
+
+    What is MongoDB Atlas?
+    MongoDB Atlas is a fully managed cloud database service by MongoDB Inc.
+    It provides MongoDB databases hosted on AWS, Azure, or Google Cloud with
+    automatic scaling, backup, and security features. The project uses the
+    M0 free tier with 512 MB storage.
+
+    What is stored in MongoDB?
+
+    Collection: users
+    - Admin account records
+    - Fields: email, username, password_hash, role, department,
+      recovery_email, is_active, created_at, updated_at
+    - Roles: admin, super_admin
+
+    Collection: documents
+    - Knowledge base document metadata
+    - Fields: title, description, file_name, file_type, file_size,
+      gridfs_id, status, chunk_count, uploaded_by, uploaded_at, processed_at
+
+    Collection: feedback
+    - Student feedback submissions
+    - Fields: name, email, batch_section, module, category, rating,
+      message, status, admin_note, created_at, updated_at, resolved_at,
+      ip_hash, user_agent, page_context, is_spam
+
+    Collection: timetable_entries
+    - Individual class schedule entries
+    - Fields: timetable_id, batch_section, course, teacher, day,
+      slotStart, slotSpan, room, type
+
+    Collection: timetable_offerings
+    - Course offerings for timetable generation
+    - Fields: batch_section, course, teacher, session_type, has_lab, etc.
+
+    Collection: timetable_rooms
+    - Room configuration
+    - Fields: room_code, room_type (LEC/LAB), capacity, created_at
+
+    Collection: timetable_meta
+    - Timetable generation metadata
+    - Fields: generation timestamp, stats, settings
+
+    Collection: password_reset_tokens
+    - Forgot-password token records
+    - Fields: email, user_id, token_hash (SHA-256), created_at,
+      expires_at (TTL index), used, used_at, requested_ip
+    - TTL index on expires_at auto-deletes expired tokens
+
+    Collection: audit_log
+    - Audit trail of admin actions
+    - Fields: timestamp, action, user, ip_address, severity, details
+
+    GridFS (fs.files + fs.chunks)
+    - Actual file content for knowledge base documents
+    - Files are stored as binary data split into 255 KB chunks
+
+    Why MongoDB?
+    - Schema flexibility: different collections have different schemas
+    - Cloud-hosted free tier: no infrastructure management
+    - GridFS for file storage: eliminates need for separate file storage
+    - TTL indexes: auto-cleanup of expired password reset tokens
+    - Aggregation pipeline: complex feedback filtering and statistics
+    - Native JSON: works naturally with Python dicts and Flask jsonify
+
+5.2 CHROMADB
+
+    What is ChromaDB?
+    ChromaDB is an open-source embedding database (vector database) designed
+    for AI applications. It stores vector embeddings alongside text data and
+    metadata, enabling semantic similarity search.
+
+    What is stored in ChromaDB?
+    - Text content of each document chunk (plain text)
+    - 1024-dimensional embedding vector for each chunk (BAAI BGE-M3 output)
+    - Metadata for each chunk (source, category, type, chunk_id)
+
+    How it is used:
+    When a student asks a question, the question is converted to a vector
+    using the same BGE-M3 model. ChromaDB then finds the top-k chunks
+    whose vectors are most similar (cosine similarity), returning the
+    relevant text that the LLM uses to generate an answer.
+
+    Why ChromaDB?
+    - Runs locally: no cloud cost, no API calls for retrieval
+    - Persistent: saved to disk, survives restarts
+    - LangChain integration: works directly as a LangChain vector store
+    - Lightweight: no separate server process needed
+    - Fast: similarity search is nearly instantaneous for the data sizes
+      in this project
+
+5.3 WHY BOTH DATABASES ARE NEEDED
+
+    MongoDB stores STRUCTURED data (users, timetables, feedback, metadata).
+    ChromaDB stores UNSTRUCTURED data as VECTORS (document embeddings).
+
+    MongoDB alone is NOT enough because:
+    - MongoDB does not support semantic similarity search
+    - You cannot ask MongoDB "find documents similar to this query"
+    - MongoDB can only do exact text matching or text indexes
+
+    ChromaDB alone is NOT enough because:
+    - ChromaDB is not designed for structured CRUD operations
+    - You cannot store user accounts, timetable entries, or feedback
+      with proper indexing, validation, and querying in ChromaDB
+    - ChromaDB has no concept of collections with relationships
+
+    Together, they provide:
+    MongoDB: Reliable CRUD for all application data
+    ChromaDB: Fast semantic retrieval for the AI chatbot
+
+
+================================================================================
+  SECTION 6: EMBEDDING MODEL / AI MODEL DETAILS
+================================================================================
+
+6.1 EMBEDDING MODEL: BAAI/BGE-M3
+
+    Full Name: BAAI BGE-M3 (Beijing Academy of AI - Bilingual General Embedding - Multi-lingual Multi-Functionality Multi-Granularity)
+
+    Where Initialized: vector_store_free.py, line ~75
+    HuggingFaceEmbeddings(
+        model_name="BAAI/bge-m3",
+        model_kwargs={'device': 'cpu'},
+        encode_kwargs={'normalize_embeddings': True},
+        cache_folder=".hf_cache"
+    )
+
+    Key Properties:
+    - Embedding dimension: 1024
+    - Languages supported: 100+ (English, Urdu, Arabic, Chinese, etc.)
+    - Model size: ~2.3 GB
+    - Execution: Runs locally on CPU (no GPU needed)
+    - Normalization: L2-normalized (unit vectors for cosine similarity)
+    - License: MIT (free for commercial and academic use)
+
+    Why This Model Was Chosen:
+    1. MULTILINGUAL: CUI students may type in English, Urdu, or Roman Urdu.
+       BGE-M3 understands all three, so a Urdu query can match English
+       documents and vice versa.
+    2. FREE: No API key required, no per-request cost, no rate limits.
+       This is critical for a university project with no budget.
+    3. LOCAL: Runs entirely on the machine. No internet required for
+       embeddings after initial model download.
+    4. HIGH QUALITY: State-of-the-art on multilingual benchmarks (MTEB).
+       Produces semantically meaningful vectors.
+    5. COMPATIBLE: Works seamlessly with LangChain and ChromaDB through
+       the HuggingFaceEmbeddings wrapper.
+
+    How It Interacts with Documents and ChromaDB:
+    During indexing: Document text -> BGE-M3 model -> 1024-dim vector -> ChromaDB
+    During query: Question text -> BGE-M3 model -> 1024-dim vector -> ChromaDB similarity search -> Top-k similar chunks
+
+    Performance vs Cost Tradeoff:
+    - Slower than API-based embeddings (runs on CPU, ~0.5-2 seconds per batch)
+    - But completely free and unlimited
+    - Trade-off is acceptable for a university chatbot where cold start
+      time is not critical
+
+6.2 LLM MODELS
+
+    Primary: Groq API with llama-3.3-70b-versatile
+    - 70 billion parameter model by Meta
+    - Extremely fast inference on Groq hardware
+    - High-quality answers comparable to GPT-4
+    - Free tier available
+
+    Alternative: Perplexity API with sonar model
+    - Perplexity's proprietary model with built-in search
+    - Configurable via environment variable LLM_PROVIDER
+
+    Both LLMs use the same interface:
+    - generate_response_with_context(): RAG-style answer generation
+    - generate_chat_response(): Multi-turn conversation with history
+    - Both support Roman Urdu transliteration post-processing
+
+
+================================================================================
+  SECTION 7: TIMETABLE MODULE - COMPLETE STEP BY STEP
+================================================================================
+
+7.1 OVERVIEW
+
+    The timetable module has two main paths:
+
+    Path A: Manual / Excel Upload (Simple)
+    - Admin creates entries manually or uploads Excel/CSV
+    - Entries are stored directly in MongoDB timetable_entries collection
+    - Students view timetable by batch code
+
+    Path B: Automatic Generation (Advanced)
+    - Admin uploads course offerings CSV
+    - Admin configures rooms
+    - Admin triggers CP-SAT solver
+    - Solver generates optimal timetable
+    - Results stored in MongoDB
+    - Students view like Path A
+
+7.2 DATA FORMAT
+
+    Timetable Entry Schema:
+    {
+        timetable_id: "default" or "generated",
+        batch_section: "FA22-BCS-8A" (normalized),
+        course: "Artificial Intelligence",
+        teacher: "Dr. Ahmed",
+        day: 0-4 (Mon-Fri),
+        slotStart: 1-6,
+        slotSpan: 1 (lecture) or 2 (lab),
+        room: "CS-1",
+        type: "LEC" or "LAB"
+    }
+
+    Time Slots:
+    Slot 1: 8:30 - 10:00 AM
+    Slot 2: 10:00 - 11:30 AM
+    Slot 3: 11:30 - 1:00 PM
+    [BREAK: 1:00 - 1:30 PM]
+    Slot 4: 1:30 - 3:00 PM
+    Slot 5: 3:00 - 4:30 PM
+    Slot 6: 4:30 - 6:00 PM
+
+    Days: Monday(0) through Friday(4)
+
+7.3 MANUAL ENTRY / EXCEL UPLOAD
+
+    Manual Entry:
+    POST /api/timetable/entry with JSON body
+    - Server validates fields (validate_timetable_entry)
+    - Normalizes batch code (uppercase, hyphen-separated)
+    - Inserts into MongoDB timetable_entries
+    - Audit logged
+
+    Excel/CSV Upload:
+    POST /api/uploads/timetable-excel with file upload
+    - Reads file with Pandas (CSV or Excel)
+    - Expected columns: batch_section, course, teacher, day, slotStart,
+      slotSpan, room, type
+    - Iterates rows, normalizes batch codes, inserts entries
+    - Returns count of entries added and any errors
+
+7.4 AUTOMATIC GENERATION (CP-SAT SOLVER)
+
+    This is the advanced feature. The full workflow:
+
+    Step 1: Admin uploads course offerings CSV
+    POST /api/admin/upload_offerings with CSV file
+    - CSV columns: batch_section, course, teacher
+    - System auto-detects labs (course name contains "Lab" or teacher name
+      suggests lab session)
+    - Offerings stored in MongoDB timetable_offerings collection
+
+    Step 2: Admin configures rooms (optional)
+    POST /api/admin/rooms with room data (room_code, room_type, capacity)
+    or POST /api/admin/rooms/upload with CSV file
+
+    Step 3: Admin triggers generation
+    POST /api/timetable/generate with optional time_limit
+
+    The TimetableGeneratorAPI.generate_timetable() does:
+
+    Substep A: Load offerings from MongoDB
+    - Reads all documents from timetable_offerings collection
+    - Creates ClassSession objects (batch, course, teacher, lab flag, slot duration)
+
+    Substep B: Load room configuration from MongoDB
+    - Reads from timetable_rooms collection
+    - Separates into lecture rooms and lab rooms
+
+    Substep C: Run TimetableGenerator (CP-SAT Solver)
+    The solver creates a constraint satisfaction model:
+
+    VARIABLES:
+    For each class session s, for each possible (day, slot) pair:
+    - x[s, day, slot] = Boolean variable (1 if session s is on day at slot)
+
+    HARD CONSTRAINTS:
+    1. Assignment: Each session must be assigned exactly one (day, slot) pair
+    2. Teacher clash: No teacher can have two sessions at the same (day, slot)
+    3. Batch clash: No batch can have two sessions at the same (day, slot)
+    4. Lab constraints: Lab sessions (2-hour) must use consecutive slots
+       and cannot cross the break (slots 3-4 are separated by break)
+    5. Room capacity (implicit through room assignment)
+
+    SOFT CONSTRAINTS (Objective to minimize):
+    1. Gaps: Minimize gaps between sessions for each batch on each day
+    2. Late slots: Minimize sessions in slot 5 and slot 6
+    3. Spread: Prefer spreading sessions across multiple days
+
+    The solver uses a configurable time limit (default 300 seconds / 5 minutes).
+
+    Substep D: Room Assignment
+    After the CP-SAT solver determines day/slot assignments, a greedy
+    room assignment algorithm assigns rooms:
+    - For each (day, slot), assign rooms without conflicts
+    - Lecture rooms for LEC sessions, lab rooms for LAB sessions
+    - If not enough rooms, some sessions may have no room assigned
+
+    Substep E: Clash Verification
+    The ClashChecker validates the final timetable:
+    - Groups all sessions by (day, slot)
+    - Checks for teacher clashes (same teacher in two places)
+    - Checks for batch clashes (same batch in two places)
+    - Checks for room clashes (same room used twice)
+    - Reports total clashes
+
+    Substep F: Store Results
+    - Clears previous timetable_entries for the same timetable_id
+    - Inserts all scheduled sessions into MongoDB timetable_entries
+    - Stores generation metadata in timetable_meta collection
+
+    Result returned to admin:
+    {
+        success: true/false,
+        stats: {
+            total_offerings, total_entries, batches_count,
+            teachers_count, courses_scheduled, clashes,
+            generation_time
+        },
+        missing_classes: [...],
+        errors: [...]
+    }
+
+7.5 BATCH VIEW FLOW (Student Side)
+
+    1. Student opens /timetable page
+    2. Page loads available batch codes via GET /api/timetable/batches
+    3. Student enters or selects batch code (e.g., "FA22-BCS-8A")
+    4. Frontend calls GET /api/timetable/batch/FA22-BCS-8A
+    5. Backend normalizes batch code, queries MongoDB timetable_entries
+    6. Formats entries with day names and slot labels:
+       {
+           batch: "FA22-BCS-8A",
+           entries: [
+               {
+                   course: "AI", teacher: "Dr. Ahmed",
+                   day: 0, dayName: "Monday",
+                   slotStart: 1, slotLabel: "8:30-10:00",
+                   slotSpan: 1, room: "CS-1", type: "LEC"
+               }, ...
+           ]
+       }
+    7. Frontend renders as a visual timetable grid
+
+7.6 PDF EXPORT
+
+    Students can download their batch timetable as PDF:
+    GET /api/timetable/batch/<code>/pdf
+
+    The TimetablePDFRenderer (renderer/pdf_renderer.py):
+    - Uses ReportLab to create landscape A4 PDF
+    - Formats in the official CUI timetable layout:
+      - Header: "COMSATS Vehari Centralized Timetable"
+      - Big centered batch title
+      - 8-column table: Day | Slot 1-3 | BREAK | Slot 4-6
+      - Each slot shows course name, room, and teacher
+      - Labs span merged cells (2 slots wide)
+      - Color coding: blue for lectures, orange for labs
+    - Admin can export all batches as single PDF
+
+7.7 REPEATER LOGIC
+
+    For repeater students who need to retake courses:
+
+    Layer-1 (Fast): RepeaterSuggester (solver/layer1_suggest.py)
+    - Uses 30-bit bitmask (5 days x 6 slots) per offering
+    - Student's schedule is encoded as a single integer
+    - Clash check: (student_mask & offering_mask) != 0  [O(1) time]
+    - Returns feasible alternatives (no clash) and conflicting ones
+
+    Layer-2 (Optimal): RepeaterSolver (solver/layer2_cpsat.py)
+    - Uses CP-SAT solver for multi-course optimization
+    - When student needs to fit multiple repeat courses
+    - Finds optimal combination minimizing gaps and late slots
+
+
+================================================================================
+  SECTION 8: FEEDBACK SYSTEM - COMPLETE STEP BY STEP
+================================================================================
+
+8.1 PUBLIC FEEDBACK SUBMISSION
+
+    Step 1: Student opens /feedback page (feedback_new.html)
+    Step 2: Fills the form:
+    - Batch/Section (required): e.g., FA22-BCS-8A (validated by regex)
+    - Module (required): Chatbot, Timetable, or General
+    - Category (required): Bug Report, Suggestion, Complaint, UI/UX Issue,
+      Wrong Timetable, Chatbot Wrong Answer, or Other
+    - Rating (required): 1-5 stars
+    - Message (required): 10-1000 characters
+    - Name (optional)
+    - Email (optional, validated if provided)
+    - Hidden honeypot field ("website") for bot detection
+
+    Step 3: Form submitted via POST /api/feedback
+    Rate limited: 3 submissions per 10 minutes per IP
+
+    Step 4: Server-side validation (_validate_feedback_input):
+    - Batch code format validation
+    - Module must be in allowed set
+    - Category must be in allowed set
+    - Rating 1-5
+    - Message length 10-1000
+    - Email format (if provided)
+    - Honeypot check: if "website" field is filled, it is a bot
+
+    Step 5: Anti-spam measures:
+    - Honeypot: Bots fill hidden field -> flagged as spam but silently
+      accepted (returns success to not alert the bot)
+    - Duplicate detection: Same batch + module + message within 10 minutes
+      is rejected as duplicate
+    - Rate limiting: Max 3 submissions per 10 minutes per IP
+    - IP hashing: SHA-256 hash of IP stored (not raw IP) for tracking
+
+    Step 6: Document stored in MongoDB feedback collection:
+    {
+        name, email, batch_section, module, category, rating, message,
+        status: "new",
+        admin_note: "",
+        created_at, updated_at, resolved_at: null,
+        ip_hash: SHA-256(IP),
+        user_agent: sanitized browser string,
+        page_context: where feedback was triggered,
+        is_spam: false
+    }
+
+8.2 ADMIN FEEDBACK MANAGEMENT
+
+    Admin views feedback via the admin dashboard:
+
+    GET /api/admin/feedback with query parameters:
+    - page, per_page (pagination)
+    - status (new, in_review, resolved, rejected)
+    - module (Chatbot, Timetable, General)
+    - category
+    - batch (batch code)
+    - min_rating, max_rating
+    - is_spam (true/false)
+    - date_from, date_to
+
+    Response includes:
+    - Paginated feedback list
+    - Summary statistics (aggregation pipeline):
+      total count, average rating, counts by status, counts by module
+
+    Status Workflow:
+    new -> in_review -> resolved OR rejected
+
+    Admin Actions:
+    - Update status: PUT /api/admin/feedback/<id>/status
+      (with optional admin_note, sets resolved_at if resolved)
+    - Toggle spam: PUT /api/admin/feedback/<id>/spam
+      (marks/unmarks as spam with audit logging)
+    - View detail: GET /api/admin/feedback/<id>
+
+    All admin feedback actions are audit-logged.
+
+
+================================================================================
+  SECTION 9: AUTHENTICATION & SECURITY
+================================================================================
+
+9.1 ADMIN LOGIN FLOW
+
+    Step 1: Admin opens /login page
+    Step 2: Enters email and password
+    Step 3: Frontend sends POST /api/auth/token
+    Rate limited: 5 per minute per IP (Flask-Limiter)
+    Additional: 5 attempts per 5-minute window per IP (custom in-memory)
+
+    Step 4: Server validates:
+    - Email format validation (regex)
+    - User lookup in MongoDB users collection
+    - User must have role "admin" or "super_admin"
+    - Password verified using bcrypt.checkpw()
+    - User must be active (is_active flag)
+
+    Step 5: If successful:
+    - JWT access token created with claims:
+      {sub: email, role: "admin"/"super_admin", department: "CS", exp: ..., iat: ...}
+    - Token returned to frontend
+    - Frontend stores in localStorage (cui_access_token)
+
+    Step 6: All subsequent admin API calls include:
+    Authorization: Bearer <token>
+
+    Step 7: Decorators verify token:
+    @token_required - extracts and verifies JWT, sets request.user
+    @admin_required - additionally checks role is admin/super_admin
+    @require_role('role1', 'role2') - checks specific roles
+    @require_department_scope('CS', 'SE') - checks department claim
+
+9.2 JWT IMPLEMENTATION IN THIS PROJECT
+
+    Token Creation (create_access_token):
+    - Algorithm: HS256 (HMAC with SHA-256)
+    - Secret: JWT_SECRET_KEY from environment (auto-generated if missing)
+    - Payload: {sub: email, role: role, department: dept, exp: expiry, iat: now}
+    - Default expiry: 60 minutes
+
+    Token Verification (verify_token):
+    - Decodes JWT using PyJWT library
+    - Checks signature validity
+    - Checks expiration
+    - Returns payload or None
+
+    Why JWT (not sessions)?
+    - Stateless: server doesn't store session data
+    - Scalable: works with multiple server instances
+    - Standard: widely used for API authentication
+    - Frontend can include token in AJAX headers easily
+
+9.3 PASSWORD HASHING (BCRYPT)
+
+    How it works in this project:
+    - Registration: bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    - Login: bcrypt.checkpw(input_password.encode('utf-8'), stored_hash.encode('utf-8'))
+
+    Why bcrypt?
+    - Adaptive: cost factor increases with hardware improvements
+    - Built-in salt: no need to manage salts separately
+    - Industry standard for password storage
+    - Resistant to brute-force and rainbow table attacks
+
+    Password Policy (validate_password):
+    - Minimum 12 characters
+    - Maximum 64 characters
+    - At least 1 uppercase letter
+    - At least 1 lowercase letter
+    - At least 1 digit
+    - At least 1 special character
+    - Not in common/weak passwords list (loaded from file + hardcoded set)
+
+9.4 WHY STUDENTS DO NOT LOG IN
+
+    The chatbot, timetable viewer, and feedback form are all PUBLIC features.
+    Students do not need accounts because:
+    - Chatbot answers are from public university information
+    - Timetable viewing is read-only public data
+    - Feedback is anonymous (optional name/email)
+    Only admin functions (upload, edit, delete, generate) require authentication.
+
+9.5 SECURITY HEADERS
+
+    Every response includes these headers (add_security_headers middleware):
+    - X-Content-Type-Options: nosniff (prevents MIME sniffing)
+    - X-Frame-Options: SAMEORIGIN (prevents clickjacking)
+    - X-XSS-Protection: 1; mode=block (browser XSS filter)
+    - Referrer-Policy: strict-origin-when-cross-origin
+    - Permissions-Policy: camera=(), microphone=(), geolocation=()
+    - Content-Security-Policy: restricts script/style/font/image sources
+
+9.6 INPUT VALIDATION & SANITIZATION
+
+    All user inputs are validated server-side:
+    - Emails: regex pattern validation
+    - Passwords: length, complexity, common password check
+    - Batch codes: regex format validation
+    - Feedback: length limits, allowed module/category values
+    - Files: extension whitelist, size limit (50 MB), double extension check
+    - Chat messages: length 1-2000 characters
+    - Timetable entries: required fields, valid day/slot/span ranges
+    - Search queries: MongoDB operator injection prevention ($, {, })
+    - All strings: HTML-escaped and truncated via sanitize_string()
+
+9.7 RATE LIMITING
+
+    Flask-Limiter provides per-endpoint rate limits:
+    - Login: 5 per minute
+    - Forgot-password: 3 per 15 minutes
+    - Reset-password: 5 per 15 minutes
+    - Validate-reset-token: 10 per 15 minutes
+    - Feedback submit: 3 per 10 minutes
+    - Default: no global limit (only per-endpoint limits)
+
+    Additional custom rate limiting:
+    - Login: 5 attempts per 5-minute window per IP (in-memory tracking)
+
+9.8 AUDIT LOGGING
+
+    All sensitive admin actions are logged to MongoDB audit_log collection:
+    - LOGIN_SUCCESS, LOGIN_FAILURE
+    - DOCUMENT_UPLOAD, DOCUMENT_DELETE
+    - TIMETABLE_CREATE, TIMETABLE_UPDATE, TIMETABLE_DELETE
+    - TIMETABLE_GENERATE, TIMETABLE_EXCEL_UPLOAD
+    - ADMIN_UNLOCK, ADMIN_LOCK
+    - PASSWORD_RESET_REQUEST, PASSWORD_RESET_COMPLETE, PASSWORD_RESET_FAILED
+    - ROLE_CHANGE, USER_DEACTIVATED
+
+    Each entry includes: timestamp, action, user, IP address, severity, details.
+
+
+================================================================================
+  SECTION 10: FORGOT PASSWORD / RESET PASSWORD FLOW
+================================================================================
+
+10.1 FORGOT PASSWORD (Requesting a Reset)
+
+    Step 1: Admin opens /forgot-password page
+    Step 2: Enters their admin email address
+    Step 3: Frontend sends POST /api/auth/forgot-password
+    Rate limited: 3 per 15 minutes
+
+    Step 4: Server validates email format
+    Step 5: Checks if user exists with admin role in MongoDB users collection
+    Step 6: If not found or not admin: returns 404 (specific error shown)
+
+    Step 7: Generates reset token
+    - secrets.token_urlsafe(48) creates a cryptographically secure random token
+    - Token is hashed using SHA-256 (hashlib.sha256)
+    - ONLY the hash is stored in MongoDB (never the plain token)
+    - Previous tokens for this email are deleted (invalidated)
+
+    Step 8: Token record stored in MongoDB password_reset_tokens:
+    {
+        email: "admin@cui.edu.pk",
+        user_id: ObjectId("..."),
+        token_hash: "a1b2c3d4...",  // SHA-256 hash
+        created_at: ISODate("..."),
+        expires_at: ISODate("..."),  // 10 minutes from now
+        used: false,
+        used_at: null,
+        requested_ip: "192.168.1.1"
+    }
+
+    Step 9: TTL index on expires_at auto-deletes expired tokens
+
+    Step 10: Email sent via Gmail SMTP
+    - Uses recovery_email field if set, otherwise login email
+    - HTML email with branded template (CUI Campus Bot design)
+    - Contains reset link: http://localhost:5000/reset-password?token=<raw_token>
+    - Shows expiry time (10 minutes)
+    - Plain text fallback included
+
+10.2 PASSWORD RESET (Using the Token)
+
+    Step 1: Admin clicks email link -> opens /reset-password?token=<token>
+    Step 2: Frontend calls GET /api/auth/validate-reset-token?token=<token>
+    - Server hashes the token with SHA-256
+    - Looks up hash in password_reset_tokens collection
+    - Checks: exists? not used? not expired?
+    - Returns { valid: true/false, reason, message }
+
+    Step 3: If valid, admin enters new password (+ confirm password)
+    Step 4: Frontend sends POST /api/auth/reset-password
+    {
+        token: "<raw_token>",
+        new_password: "NewStrongP@ss123",
+        confirm_password: "NewStrongP@ss123"
+    }
+
+    Step 5: Server validates:
+    - Token is present
+    - New password meets policy (12+ chars, uppercase, lowercase, digit, special)
+    - Passwords match
+    - Token is valid (not used, not expired)
+
+    Step 6: Password update:
+    - New password hashed with bcrypt
+    - Users collection updated with new password_hash
+    - password_changed_at timestamp set
+    - Token marked as used (used: true, used_at: timestamp)
+    - All other outstanding tokens for this email invalidated
+
+    Step 7: Admin redirected to login page
+
+10.3 SECURITY CONSIDERATIONS
+
+    - Token is NEVER stored in plain text (only SHA-256 hash)
+    - Token expires in 10 minutes (configurable)
+    - Previous tokens are invalidated when new one is created
+    - Token can only be used once
+    - Password policy enforced on new password
+    - Rate limiting prevents brute-force token guessing
+    - Specific error messages help legitimate admins while not leaking info
+
+
+================================================================================
+  SECTION 11: FRONTEND IMPLEMENTATION
+================================================================================
+
+11.1 TECHNOLOGY CHOICES
+
+    - Jinja2 templates served by Flask (server-side rendering)
+    - Tailwind CSS via CDN (utility-first styling)
+    - Vanilla JavaScript (no framework, no build step)
+    - Fetch API for AJAX calls to backend
+    - Custom CSS for glowing effects, glass cards, animations
+
+11.2 LANDING PAGE (index.html)
+
+    - Dark theme with electric blue accents
+    - Hero section with COMSATS logo and "CUI Campus Bot" title
+    - Animated chatbot preview card with pulse glow effect
+    - "Let's Chat with CUI Campus Bot" button
+    - Module cards section: AI Campus Assistant, Timetable & Schedules,
+      Academic & Fees Guidance, Feedback & Support
+    - Sidebar navigation (hamburger menu) with links to all pages
+    - Background images with dark overlay
+    - Staggered fade-in animations
+
+11.3 CHATBOT UI (chat.html)
+
+    - Chat message area with user/bot message bubbles
+    - User messages: right-aligned
+    - Bot messages: left-aligned with typing indicator
+    - Language selector dropdown: English, Urdu, Roman Urdu, Auto-detect
+    - Suggested questions displayed as clickable chips
+    - Clear conversation button
+    - RTL (right-to-left) auto-detection for Urdu text
+    - Welcome message in selected language
+    - API call: POST /api/chat with message and preferred_language
+
+11.4 TIMETABLE UI (timetable.html)
+
+    - Batch code input field with autocomplete from available batches
+    - Load button to fetch timetable
+    - Timetable displayed as a weekly grid (Mon-Fri, Slots 1-6)
+    - PDF download button per batch
+    - Color-coded cells for lectures vs labs
+    - Responsive design for mobile viewing
+
+11.5 FEEDBACK UI (feedback_new.html)
+
+    - Module-based form with dropdowns
+    - Star rating component (1-5)
+    - Text area for message
+    - Hidden honeypot field for bot detection
+    - Client-side validation before submit
+    - Success/error toast notifications
+
+11.6 LOGIN UI (login.html)
+
+    - Email and password input fields
+    - Login button with loading state
+    - "Forgot Password?" link
+    - Error messages for invalid credentials
+    - On success: stores JWT in localStorage, redirects to admin dashboard
+    - Sidebar shows/hides admin links based on auth state
+
+11.7 ADMIN DASHBOARD (admin.html)
+
+    - Tab-based interface: Documents, Timetable, Feedback, Stats
+    - Documents tab: upload new files, view/delete existing documents
+    - Timetable tab: create/edit/delete entries, Excel upload,
+      generate timetable, configure rooms
+    - Feedback tab: filterable list with status management
+    - Stats tab: document count, chunk count, feedback count,
+      MongoDB storage usage meter
+    - All API calls include JWT Bearer token
+
+11.8 FORGOT PASSWORD / RESET PASSWORD UI
+
+    forgot_password.html:
+    - Email input field
+    - Submit button
+    - Success/error messages
+    - Link back to login
+
+    reset_password.html:
+    - Pre-validates token on page load via API
+    - New password + confirm password fields
+    - Password requirements shown
+    - Submit button
+    - Success redirects to login
+
+
+================================================================================
+  SECTION 12: BACKEND IMPLEMENTATION
+================================================================================
+
+12.1 FLASK APP STRUCTURE
+
+    Entry Point: app.py (running on port 5000)
+
+    Route Organization:
+    - Page routes: /, /chat, /timetable, /feedback, /login, /admin, etc.
+    - Auth API: /api/auth/* (login, current user, forgot/reset password)
+    - Chat API: /api/chat, /api/clear, /api/status, /api/suggestions
+    - Document API: /api/documents/* (CRUD, upload)
+    - Feedback API: /api/feedback/* (via Blueprint), /api/admin/feedback/*
+    - Timetable API: /api/timetable/* (batches, batch/<code>, entry CRUD)
+    - Generator API: /api/timetable/generate, /api/admin/upload_offerings
+    - Room API: /api/admin/rooms/*
+    - Stats API: /api/stats, /api/atlas-storage, /api/storage/check
+    - PDF Export: /api/timetable/batch/<code>/pdf, /api/timetable/export/all.pdf
+
+12.2 REQUEST HANDLING PATTERN
+
+    Public endpoints (no auth):
+    - Chat, timetable view, feedback submit, suggestions, status
+
+    Admin endpoints:
+    - Protected by @admin_required (JWT) or @require_admin_unlocked (session/JWT)
+    - Documents CRUD, timetable entry CRUD, feedback management, stats,
+      user management, timetable generation, room management
+
+12.3 DATABASE INTEGRATION
+
+    MongoDB is accessed via a global mongo_db variable:
+    - connect_mongodb() establishes connection with SSL
+    - Creates indexes on startup
+    - Creates default admin user if not exists
+    - mongo_gridfs for file storage operations
+
+12.4 HELPER FUNCTIONS
+
+    _strip_markdown(): Removes Markdown formatting from LLM responses
+    _check_login_rate_limit(): In-memory rate limiting for login
+    normalize_batch_code(): Standardizes batch code format
+    _hash_ip(): SHA-256 hash of IP for privacy
+
+12.5 ERROR HANDLING
+
+    - @app.errorhandler(429): Rate limit exceeded (JSON response)
+    - Try/except blocks in all API endpoints
+    - Proper HTTP status codes: 400, 401, 403, 404, 429, 500, 503
+    - Structured error responses: {"detail": "error message"}
+
+
+================================================================================
+  SECTION 13: FULL REQUEST/RESPONSE FLOWS
+================================================================================
+
+13.1 CHATBOT QUERY FLOW
+
+    1. Student types question in chat UI
+    2. Frontend sends POST /api/chat with {message, preferred_language}
+    3. Server validates message is non-empty
+    4. Gets conversation history from Flask session
+    5. Selects language-specific system prompt
+    6. Calls rag_pipeline.query(question, system_prompt, history)
+    7. BGE-M3 model converts question to 1024-dim vector
+    8. ChromaDB finds top-5 similar document chunks
+    9. LLM (Groq/Perplexity) receives system prompt + context + question
+    10. LLM generates answer
+    11. Answer is post-processed (strip markdown, transliterate if needed)
+    12. Q&A pair added to session history (max 10 turns)
+    13. JSON response: {success, answer, sources, categories, language, timestamp}
+    14. Frontend displays answer in chat bubble
+
+13.2 TIMETABLE FETCH BY BATCH CODE
+
+    1. Student enters batch code (e.g., FA22-BCS-8A) on timetable page
+    2. Frontend sends GET /api/timetable/batch/FA22-BCS-8A
+    3. Server normalizes batch code (uppercase, hyphens)
+    4. Queries MongoDB timetable_entries: {batch_section: "FA22-BCS-8A"}
+    5. If not found exact: tries case-insensitive regex match
+    6. Formats entries with day names and slot labels
+    7. Returns JSON: {batch, entries: [{course, teacher, day, dayName, slotStart, slotLabel, ...}]}
+    8. Frontend renders as weekly grid table
+
+13.3 FEEDBACK SUBMIT FLOW
+
+    1. Student fills feedback form (batch, module, category, rating, message)
+    2. Frontend sends POST /api/feedback
+    3. Rate limit check: 3 per 10 minutes per IP
+    4. Server validates all fields (batch format, allowed values, lengths)
+    5. Honeypot check: if "website" field filled, silently mark as spam
+    6. Duplicate check: same batch+module+message within 10 minutes rejected
+    7. Document created with status "new", ip_hash, user_agent
+    8. Inserted into MongoDB feedback collection
+    9. Returns {success: true, message: "Thank you..."}
+
+13.4 ADMIN LOGIN FLOW
+
+    1. Admin enters email and password on login page
+    2. Frontend sends POST /api/auth/token
+    3. Rate limit: 5 per minute (Flask-Limiter) + 5 per 5 min (custom)
+    4. Server validates email format
+    5. Looks up user in MongoDB users collection
+    6. Checks role is admin or super_admin
+    7. Verifies password with bcrypt.checkpw()
+    8. Checks is_active flag
+    9. Creates JWT with {sub, role, department, exp, iat}
+    10. Returns {access_token, token_type, expires_in, role, user}
+    11. Frontend stores token in localStorage
+    12. Sidebar updates: shows admin link, hides login link
+
+13.5 FORGOT PASSWORD FLOW
+
+    1. Admin clicks "Forgot Password?" on login page
+    2. Opens /forgot-password page
+    3. Enters admin email
+    4. Frontend sends POST /api/auth/forgot-password
+    5. Rate limit: 3 per 15 minutes
+    6. Server validates email
+    7. Checks user exists with admin role
+    8. Generates secure random token (secrets.token_urlsafe(48))
+    9. Stores SHA-256 hash in MongoDB password_reset_tokens
+    10. Sends email with reset link via Gmail SMTP
+    11. Returns success message
+
+13.6 PASSWORD RESET FLOW
+
+    1. Admin clicks reset link in email -> /reset-password?token=<token>
+    2. Frontend validates token: GET /api/auth/validate-reset-token?token=<token>
+    3. If valid: shows password form
+    4. Admin enters new password + confirm password
+    5. Frontend sends POST /api/auth/reset-password
+    6. Server validates token, passwords match, password policy
+    7. Hashes new password with bcrypt
+    8. Updates users collection
+    9. Marks token as used
+    10. Returns success message
+    11. Admin redirected to login page
+
+13.7 TIMETABLE GENERATION FLOW
+
+    1. Admin uploads offerings CSV: POST /api/admin/upload_offerings
+    2. Admin configures rooms: POST /api/admin/rooms
+    3. Admin triggers generation: POST /api/timetable/generate
+    4. Server loads offerings from MongoDB
+    5. Creates ClassSession objects
+    6. Runs CP-SAT solver with constraints (teacher/batch/room clashes)
+    7. Solver returns assignment of sessions to (day, slot) pairs
+    8. Greedy room assignment post-processing
+    9. Clash checker validates result
+    10. Results stored in MongoDB timetable_entries
+    11. Generation metadata stored in timetable_meta
+    12. Returns success/failure with statistics
+
+
+================================================================================
+  SECTION 14: WHY EACH MAJOR CHOICE IS SUITABLE
+================================================================================
+
+14.1 WHY FLASK?
+    Flask is lightweight and gives precise control over every aspect of the
+    application. For a university project combining web pages (Jinja2 templates)
+    and JSON APIs, Flask is simpler than Django (which has opinions about
+    database ORMs, admin panels, etc.) and more mature than FastAPI for
+    template rendering. Flask's extensibility (CORS, Limiter, Blueprint)
+    makes it easy to add features incrementally.
+
+14.2 WHY MONGODB?
+    MongoDB's schema-less design is ideal because the project stores many
+    different document types (users, feedback, timetable entries, tokens,
+    audit logs) each with different schemas. MongoDB Atlas provides free
+    cloud hosting (512 MB) with automatic backups, SSL encryption, and no
+    server management. GridFS support allows storing uploaded files
+    directly in the database instead of needing a separate file server.
+
+14.3 WHY CHROMADB?
+    ChromaDB is the simplest way to add vector search to a Python application.
+    It runs in-process (no separate server), persists to disk, and integrates
+    directly with LangChain. For a university project where the dataset is
+    moderate (hundreds of document chunks, not millions), ChromaDB's
+    performance is more than sufficient. Alternatives like Pinecone or
+    Weaviate would add cloud costs and complexity.
+
+14.4 WHY BAAI/BGE-M3 EMBEDDING MODEL?
+    This project serves CUI Vehari Campus where students communicate in
+    English, Urdu, and Roman Urdu. BGE-M3 is one of the few high-quality
+    embedding models that supports all these languages in a single model.
+    Running locally eliminates API costs and rate limits, which is critical
+    for a free educational project. The model's quality on multilingual
+    benchmarks ensures that cross-language queries work (e.g., an Urdu
+    question matching English documents).
+
+14.5 WHY JWT?
+    JWT provides stateless authentication perfect for API-based admin
+    operations. The admin dashboard is a single-page application that
+    makes multiple AJAX calls - JWT tokens can be included in every
+    request header without server-side session management. This is simpler
+    and more scalable than cookie-based sessions for API endpoints.
+
+14.6 WHY BCRYPT?
+    Bcrypt is the industry standard for password hashing. Its adaptive
+    cost factor makes it future-proof against hardware advances. Unlike
+    SHA-256 or MD5, bcrypt is intentionally slow (making brute-force
+    attacks impractical) and includes automatic salt generation.
+
+14.7 WHY TAILWIND CSS?
+    Tailwind's utility-first approach enables rapid UI development without
+    writing custom CSS files. For a university project with multiple pages
+    (chat, timetable, feedback, admin, login), Tailwind ensures consistent
+    styling with minimal effort. Loading via CDN means no build step needed.
+
+14.8 WHY CP-SAT SOLVER FOR TIMETABLES?
+    Timetable generation is a classic Constraint Satisfaction Problem (CSP).
+    Google OR-Tools' CP-SAT solver is specifically designed for such problems.
+    It can handle hard constraints (no clashes) and soft objectives (minimize
+    gaps) simultaneously. Unlike greedy algorithms that may produce suboptimal
+    or infeasible solutions, CP-SAT guarantees finding a valid solution if
+    one exists and optimizes the objective function.
+
+
+================================================================================
+  SECTION 15: IMPORTANT DEPENDENCIES / LIBRARIES
+================================================================================
+
+  Package                    | Purpose                           | Used Where
+  ========================= | ================================= | ==========================
+  flask                      | Web framework, routing, templates  | app.py
+  flask-cors                 | Cross-origin resource sharing      | app.py
+  flask-limiter              | Rate limiting API endpoints        | app.py
+  fastapi                    | Alternative API framework          | app/ directory
+  uvicorn                    | ASGI server for FastAPI            | app/ directory
+  pymongo                    | MongoDB driver                     | app.py, all API modules
+  certifi                    | SSL certificates for MongoDB       | app.py, mongodb_timetable.py
+  langchain                  | AI orchestration framework         | RAG pipeline modules
+  langchain-community        | Community document loaders         | data_loader.py
+  langchain-core             | Core LangChain components          | All RAG modules
+  langchain-text-splitters   | Text chunking                      | load_cui_data.py
+  langchain-chroma           | ChromaDB vector store wrapper      | vector_store_free.py
+  langchain-huggingface      | HuggingFace embeddings wrapper     | vector_store_free.py
+  chromadb                   | Vector database                    | vector_store_free.py
+  sentence-transformers      | Embedding model inference          | via langchain-huggingface
+  transformers               | HuggingFace model loading          | via sentence-transformers
+  torch                      | PyTorch (ML framework)             | via sentence-transformers
+  groq                       | Groq API client                    | groq_llm.py
+  requests                   | HTTP client for Perplexity API     | perplexity_llm.py
+  jwt (PyJWT)                | JWT token encoding/decoding        | app.py
+  bcrypt                     | Password hashing                   | app.py, password_reset.py
+  python-dotenv              | Environment variable loading       | app.py, config.py
+  pypdf                      | PDF text extraction                | load_cui_data.py
+  python-docx                | DOCX text extraction               | load_cui_data.py
+  pandas                     | CSV/Excel data processing          | timetable uploads
+  openpyxl                   | Excel file reading                 | timetable uploads
+  reportlab                  | PDF generation                     | renderer/pdf_renderer.py
+  ortools                    | CP-SAT constraint solver           | cpsat_generator.py
+  pydantic                   | Data validation models             | FastAPI models
+  jinja2                     | Template engine                    | Flask templates
+  numpy                      | Numerical operations               | various
+  aiofiles                   | Async file operations              | FastAPI app
+  httpx                      | Async HTTP client                  | various
+  bson                       | MongoDB ObjectId handling          | all API modules
+
+
+================================================================================
+  SECTION 16: PROJECT STRENGTHS
+================================================================================
+
+16.1 MODULARITY
+    The project is well-organized with separate modules for each concern:
+    - Security (validation, auth, audit) in security/ directory
+    - Timetable logic (solver, models, bitmask) in timetable_core/ and timetable_generator/
+    - API endpoints in api/ directory
+    - Rendering (PDF, HTML) in renderer/ directory
+    Each module can be developed and tested independently.
+
+16.2 PRACTICAL USE
+    Directly addresses real student needs at CUI Vehari Campus:
+    - Quick answers to admission, fee, scholarship questions
+    - Easy timetable lookup by batch code
+    - Anonymous feedback channel
+
+16.3 AI INTEGRATION
+    Uses state-of-the-art RAG architecture:
+    - Local multilingual embeddings (no API cost)
+    - Cloud-based LLM for high-quality answers
+    - Conversation history for multi-turn dialogue
+    - Multi-language support (English, Urdu, Roman Urdu)
+
+16.4 TIMETABLE HANDLING
+    Advanced constraint-programming solver for automatic timetable generation
+    (a complex real-world optimization problem). Manual and Excel import
+    options for flexibility. PDF export matching official CUI format.
+
+16.5 SECURITY DESIGN
+    Comprehensive security implementation:
+    - JWT authentication with role-based access control
+    - Bcrypt password hashing with strong password policy
+    - Input validation and sanitization at every endpoint
+    - Rate limiting on sensitive endpoints
+    - Security headers on all responses
+    - Audit logging of all admin actions
+    - Secure password reset with hashed tokens
+
+16.6 ADMIN MANAGEMENT
+    Full-featured admin dashboard with:
+    - Document management (upload/delete knowledge base files)
+    - Timetable management (CRUD, upload, generate, export)
+    - Feedback management (filter, status workflow, spam detection)
+    - System statistics and storage monitoring
+
+16.7 FEEDBACK LOOP
+    The module-based feedback system allows categorized input from students
+    with anti-spam protection, duplicate detection, and admin workflow
+    (new -> in_review -> resolved/rejected).
+
+16.8 DUAL DATABASE ARCHITECTURE
+    Smart use of both MongoDB (structured data) and ChromaDB (vector data),
+    each for what they do best.
+
+
+================================================================================
+  SECTION 17: LIMITATIONS / FUTURE IMPROVEMENTS
+================================================================================
+
+17.1 CURRENT LIMITATIONS
+
+    a) Single Server: Flask runs as a single-process server. Not suitable
+       for high-traffic production deployment without WSGI/ASGI workers.
+
+    b) In-Memory Rate Limiting: Uses memory:// storage for Flask-Limiter.
+       Doesn't persist across restarts or work with multiple workers.
+
+    c) No Real-Time Features: No WebSocket support for live chat or
+       real-time timetable updates.
+
+    d) No Student Accounts: Students cannot save chat history, bookmark
+       timetables, or track their feedback status.
+
+    e) CPU-Only Embeddings: BGE-M3 runs on CPU, which is slower for
+       large-scale indexing. First startup takes time for model loading.
+
+    f) Free-Tier MongoDB: 512 MB storage limit on Atlas M0 tier. Large
+       document uploads could exhaust storage.
+
+    g) No Caching Layer: No Redis or in-memory cache for frequently
+       asked questions. Each query hits ChromaDB and LLM.
+
+    h) Frontend Complexity: Vanilla JavaScript without a framework makes
+       the admin dashboard code complex and harder to maintain.
+
+    i) Local Data Directory Empty: The cui_chatbot_data directory is empty;
+       the system relies entirely on MongoDB GridFS for documents.
+
+17.2 FUTURE IMPROVEMENTS
+
+    a) Deployment: Use Gunicorn (WSGI) or Uvicorn (ASGI) with multiple
+       workers behind Nginx for production.
+
+    b) Caching: Add Redis for LLM response caching, session storage,
+       and rate limiting in multi-worker setup.
+
+    c) GPU Acceleration: Use GPU for embedding model to speed up indexing.
+
+    d) Real-Time: Add WebSocket support for live chat responses.
+
+    e) Student Auth: Optional student accounts for personalized experience.
+
+    f) Frontend Framework: Migrate admin dashboard to React or Vue for
+       better code organization.
+
+    g) CI/CD Pipeline: Add automated testing and deployment.
+
+    h) Monitoring: Add application performance monitoring (APM).
+
+    i) Mobile App: Create a mobile-friendly PWA or native app.
+
+    j) Analytics: Add query analytics to understand common student questions
+       and improve the knowledge base.
+
+
+================================================================================
+  SECTION 18: VIVA QUESTIONS AND ANSWERS
+================================================================================
+
+Q1: What is RAG and how does your project implement it?
+A1: RAG stands for Retrieval-Augmented Generation. It combines information
+    retrieval with language model generation. In my project, when a student
+    asks a question, the system first retrieves the top 5 most relevant
+    document chunks from ChromaDB using BAAI BGE-M3 embeddings (this is the
+    Retrieval step). Then, these chunks are provided as context to the Groq
+    LLM (llama-3.3-70b-versatile) which generates an accurate answer based
+    on the retrieved information (this is the Generation step). This ensures
+    answers are grounded in actual CUI campus data rather than hallucinated.
+
+Q2: What is an embedding and why is it needed?
+A2: An embedding is a numerical vector representation of text. My project
+    uses BAAI BGE-M3 to convert text chunks into 1024-dimensional vectors.
+    Embeddings are needed because computers cannot directly compare the
+    meaning of text. By converting text to vectors, we can use mathematical
+    similarity (cosine similarity) to find which document chunks are most
+    relevant to a student's question. Similar meanings result in vectors
+    that are close together in the 1024-dimensional space.
+
+Q3: What is chunking and why is it important?
+A3: Chunking is splitting large documents into smaller pieces (chunks) of
+    1000 characters with 200 character overlap. It is important because:
+    (a) Embedding models have input size limits.
+    (b) Smaller chunks are more precise for retrieval - if you embed an entire
+        document as one vector, it captures general meaning but loses specific
+        details. Small chunks ensure specific information can be retrieved.
+    (c) The overlap ensures context is not lost at chunk boundaries. If an
+        answer spans a boundary, the overlap preserves some context in both
+        chunks.
+
+Q4: Why did you use ChromaDB instead of FAISS or Pinecone?
+A4: ChromaDB was chosen because: (1) It runs locally without any cloud service
+    or cost. (2) It persists to disk automatically, so embeddings survive
+    server restarts. (3) It integrates seamlessly with LangChain. (4) For the
+    scale of this project (hundreds of chunks, not millions), ChromaDB's
+    performance is more than sufficient. Pinecone would add cloud costs,
+    and FAISS lacks metadata filtering and persistence convenience.
+
+Q5: Why did you choose MongoDB Atlas over PostgreSQL?
+A5: MongoDB's document-based schema suits this project because we store many
+    different types of data (users, feedback, timetable entries, tokens, audit
+    logs) each with different structures. MongoDB doesn't require schema
+    migrations when adding new fields. Atlas provides a free 512 MB cloud tier
+    with SSL encryption, automatic backups, and no server management.
+    GridFS allows storing uploaded files directly in the database.
+    PostgreSQL would require a fixed schema and a separate file storage solution.
+
+Q6: How does JWT authentication work in your project?
+A6: When an admin logs in with email and password, the server verifies the
+    credentials against MongoDB (bcrypt password check). If valid, a JWT token
+    is created containing the user's email, role, department, and expiry time,
+    signed with HS256 using a secret key. The frontend stores this token in
+    localStorage. For every subsequent API call, the token is included in the
+    Authorization header. The server decodes and verifies the token to confirm
+    identity and role without needing to query the database again.
+
+Q7: Why is bcrypt better than SHA-256 for passwords?
+A7: Bcrypt is specifically designed for password hashing with three advantages:
+    (1) It is intentionally slow (computationally expensive), making brute-force
+    attacks impractical. SHA-256 is fast by design, which is bad for passwords.
+    (2) It automatically generates and embeds a salt, preventing rainbow table
+    attacks. (3) It has an adaptive cost factor that can be increased as
+    hardware gets faster, keeping it secure over time.
+
+Q8: Explain how the timetable generation solver works.
+A8: The timetable generator uses Google OR-Tools CP-SAT (Constraint
+    Programming - Satisfiability) solver. It creates Boolean variables for
+    each (session, day, slot) combination. Hard constraints ensure: each session
+    is assigned exactly one time slot, no teacher teaches two sessions
+    simultaneously, no batch has two classes simultaneously, and lab sessions
+    get consecutive slots that don't cross the break. Soft objectives minimize
+    schedule gaps and late-afternoon slots. The solver explores the solution
+    space systematically and returns either an optimal or feasible solution
+    within the time limit (default 5 minutes).
+
+Q9: How does the forgot-password flow work?
+A9: Admin enters their email on the forgot-password page. The server validates
+    the email, checks the user exists with admin role, generates a
+    cryptographically secure random token (secrets.token_urlsafe(48)), stores
+    its SHA-256 hash in MongoDB with a 10-minute TTL expiry, and sends the
+    plain token as a reset link via Gmail SMTP. When the admin clicks the link,
+    the server hashes the received token, finds the matching record in MongoDB,
+    verifies it's not expired or used, and then allows the password change.
+    The token hash approach means even if the database is compromised, the
+    plain tokens are not exposed.
+
+Q10: What security measures are implemented in the project?
+A10: Multiple layers: (1) JWT authentication for admin APIs. (2) Bcrypt
+     password hashing with 12-char minimum policy. (3) Rate limiting on login
+     (5/min), forgot-password (3/15min), feedback (3/10min). (4) Security
+     headers on every response (CSP, X-Frame-Options, etc.). (5) Input
+     validation and sanitization on all endpoints. (6) MongoDB operator
+     injection prevention. (7) Audit logging of all admin actions.
+     (8) Token-based password reset with SHA-256 hashing and TTL expiry.
+     (9) Honeypot anti-spam for feedback. (10) CORS configuration.
+
+Q11: Why does the project have both Flask and FastAPI?
+A11: The Flask application (app.py) is the primary entry point that serves all
+     pages and APIs. FastAPI exists in the app/ directory as a secondary/legacy
+     framework that was explored during development. The repeater API module
+     uses FastAPI router patterns. Both frameworks can coexist - Flask handles
+     the main application while FastAPI components could serve specialized
+     endpoints. In practice, the Flask app.py is the one that runs.
+
+Q12: How do embeddings support multilingual queries?
+A12: The BAAI BGE-M3 model is trained on text in 100+ languages. It maps
+     semantically similar text to nearby vectors regardless of language. So
+     if the knowledge base contains "The fee for BS Computer Science is
+     Rs. 50,000" in English, and a student asks "CS ki fees kitni hai?" in
+     Roman Urdu, both texts will have similar embedding vectors because they
+     carry the same meaning. ChromaDB's similarity search will match them,
+     enabling cross-language retrieval.
+
+Q13: What is the bitmask approach used in the repeater system?
+A13: Each offering's schedule is encoded as a 30-bit integer (5 days x 6 slots).
+     A bit is set to 1 if the offering occupies that slot. A student's entire
+     schedule is the bitwise OR of all their offerings' bitmasks. To check for
+     a clash between a student's schedule and a new offering, we simply compute
+     (student_mask & offering_mask). If the result is non-zero, there is a
+     clash. This is O(1) time complexity - a single CPU instruction, making it
+     extremely fast for checking thousands of alternatives.
+
+Q14: How are documents uploaded and processed for the chatbot?
+A14: Admin uploads a file (PDF, DOCX, TXT, JSON, CSV) through the admin
+     dashboard. The file is stored in MongoDB GridFS (cloud storage). A metadata
+     record is created in the documents collection. Then, the RAG pipeline
+     re-indexes all data: it reads all files from GridFS, extracts text
+     (PyPDFLoader for PDFs, python-docx for DOCX, etc.), chunks the text
+     (1000 chars, 200 overlap), generates embeddings using BGE-M3, and stores
+     everything in ChromaDB. The entire knowledge base is rebuilt to include
+     the new document.
+
+Q15: What happens when ChromaDB already has embeddings at startup?
+A15: The system checks ChromaDB's document count on startup. If documents
+     already exist, it skips re-indexing and simply initializes the retriever
+     from the existing collection. This optimization means the server starts
+     in seconds instead of minutes, because it doesn't need to re-embed
+     all documents. Re-indexing only happens when explicitly triggered
+     (document upload, deletion, or manual reload).
+
+Q16: Explain the feedback anti-spam mechanism.
+A16: Three levels of spam prevention: (1) Honeypot field - a hidden "website"
+     input that legitimate users never see or fill. Bots auto-fill it, so any
+     filled honeypot silently marks the submission as spam while returning a
+     fake success message. (2) Duplicate detection - if the same batch +
+     module + message is submitted within 10 minutes, it's rejected. (3) Rate
+     limiting - maximum 3 submissions per 10 minutes per IP address.
+     Additionally, admin can manually toggle spam status and IP addresses are
+     stored as SHA-256 hashes for tracking without privacy violations.
+
+Q17: What are the hard and soft constraints in the timetable solver?
+A17: Hard constraints (must be satisfied):
+     - Each class session is assigned exactly one day and time slot
+     - No teacher can be in two places at the same time
+     - No batch can have two classes at the same time
+     - Lab sessions must occupy consecutive slots
+     - Labs cannot cross the lunch break (slot 3 to slot 4)
+     Soft constraints (optimized):
+     - Minimize gaps between classes for each batch on each day
+     - Minimize classes in late afternoon slots (5, 6)
+     - Spread classes across multiple days evenly
+
+Q18: What is the role of the audit log in the project?
+A18: The audit log records every sensitive admin action in MongoDB's audit_log
+     collection with timestamp, action type, user email, IP address, severity,
+     and additional details. This provides accountability (who did what and
+     when), helps with debugging (tracking down problematic changes), and
+     supports compliance (maintaining a record of all administrative changes
+     to student-facing data like timetables and knowledge base documents).
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================
+
+  This document covers the complete CUI Campus Bot project from architecture
+  to implementation details. It is based exclusively on actual code inspection
+  and reflects the real implementation as of March 2026.
+
+  Total modules covered: app.py, config.py, data_loader.py, load_cui_data.py,
+  rag_pipeline_free.py, vector_store_free.py, groq_llm.py, perplexity_llm.py,
+  api/feedback_api.py, api/mongodb_timetable.py, api/timetable_generator_api.py,
+  api/repeater_api.py, api/data_store.py, security/input_validation.py,
+  security/password_reset.py, security/email_service.py, security/audit_log.py,
+  timetable_generator/csv_parser.py, timetable_generator/cpsat_generator.py,
+  timetable_generator/clash_checker.py, timetable_generator/output_generator.py,
+  timetable_core/models.py, timetable_core/bitmask.py, timetable_core/fuzzy_match.py,
+  solver/layer1_suggest.py, solver/layer2_cpsat.py,
+  renderer/pdf_renderer.py, renderer/html_renderer.py,
+  app/main.py, app/auth.py, app/models.py, app/config.py, app/database.py,
+  app/dependencies.py, and all 13 HTML templates.
+
+================================================================================

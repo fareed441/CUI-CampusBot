@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUI Campus Bot | Live Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --dark-charcoal: #050d14;
+            --electric-blue: #00FFFF;
+            --cui-primary-dark: #003D72;
+            --cui-accent-green: #00B1A0;
+            --subtle-gray: #1f2937;
+        }
+
+        body {
+            background-color: var(--dark-charcoal);
+            font-family: 'Michroma', sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: fadeInSlideUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .delay-100 {
+            animation-delay: .1s;
+        }
+
+        .delay-300 {
+            animation-delay: .3s;
+        }
+
+        .delay-500 {
+            animation-delay: .5s;
+        }
+
+        .delay-700 {
+            animation-delay: .7s;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 0 0 10px rgba(0, 255, 255, .55);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 255, .95);
+            }
+
+            100% {
+                box-shadow: 0 0 10px rgba(0, 255, 255, .55);
+            }
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2.8s infinite ease-in-out;
+        }
+
+        .chat-hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* vertical center */
+            align-items: center;
+            /* horizontal center for children */
+            padding: 4.5rem 1rem 2rem;
+            background-image: linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)), url('images/c.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .chat-card {
+            background-color: var(--subtle-gray);
+            border: 3px solid var(--electric-blue);
+            border-radius: 1rem;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+        }
+
+        .chat-inner {
+            background: #0d1117;
+            border: 1px solid #1f2937;
+            border-radius: .75rem;
+            padding: 1rem 1.25rem 1.25rem;
+        }
+
+        .status-bar {
+            font-size: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding-bottom: .65rem;
+            margin-bottom: .85rem;
+            border-bottom: 1px solid #1f2937;
+            color: #6b7280;
+        }
+
+        .status-bar span.indicator {
+            width: .65rem;
+            height: .65rem;
+            background: #00ff9d;
+            border-radius: 50%;
+        }
+
+        .messages-wrapper {
+            height: 50vh;
+            max-height: 500px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+            scrollbar-width: thin;
+        }
+
+        .msg {
+            font-size: .85rem;
+            line-height: 1.25rem;
+            padding: .6rem .75rem;
+            border-radius: .65rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: rgba(0, 255, 255, 0.12);
+            color: var(--electric-blue);
+            border: 1px solid rgba(0, 255, 255, 0.4);
+        }
+
+        .msg.bot {
+            align-self: flex-start;
+            background: #1f2937;
+            color: #d1d5db;
+            border: 1px solid #2d3d4d;
+        }
+
+        .input-row {
+            position: relative;
+            display: block;
+            /* stack children; button overlays input */
+            background: #101721;
+            border: 1px solid #1f2937;
+            border-radius: .9rem;
+            padding: .35rem .9rem .35rem 1rem;
+            margin-top: 1rem;
+        }
+
+        .input-row input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e5e7eb;
+            font-size: .95rem;
+            padding: .65rem 3.4rem .65rem .1rem;
+            /* extra right padding for button space */
+        }
+
+        .send-btn {
+            position: absolute;
+            top: 50%;
+            right: .65rem;
+            transform: translateY(-50%);
+            background: #0b1320;
+            color: var(--electric-blue);
+            border: 2px solid var(--electric-blue);
+            height: 2.3rem;
+            padding: 0 .9rem;
+            border-radius: .6rem;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            font-size: .75rem;
+            font-weight: 600;
+            line-height: 1;
+            transition: background .2s, box-shadow .2s, transform .15s;
+        }
+
+        .send-btn:hover {
+            background: rgba(0, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transform: translateY(calc(-50% - 1px));
+        }
+
+        .send-btn:active {
+            transform: translateY(-50%);
+        }
+
+        .logo-mini {
+            width: 48px;
+            height: 48px;
+        }
+
+        .page-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .chat-hero {
+                padding: 3.5rem 0.75rem 1.5rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .logo-mini {
+                width: 36px;
+                height: 36px;
+            }
+
+            .chat-card {
+                width: 100%;
+                border-width: 2px;
+            }
+
+            .chat-inner {
+                padding: 0.75rem;
+            }
+
+            .messages-wrapper {
+                height: 55vh;
+                max-height: none;
+            }
+
+            .msg {
+                max-width: 90%;
+                font-size: 0.82rem;
+            }
+
+            .send-btn {
+                height: 2.1rem;
+                padding: 0 0.65rem;
+                font-size: 0.7rem;
+                right: 0.45rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-hero {
+                padding: 3rem 0.5rem 1rem;
+            }
+
+            .page-title {
+                font-size: 1.6rem;
+            }
+
+            .messages-wrapper {
+                height: 50vh;
+            }
+
+            .msg {
+                max-width: 92%;
+                font-size: 0.78rem;
+                padding: 0.5rem 0.6rem;
+            }
+
+            .send-btn span {
+                display: none;
+            }
+
+            .back-link {
+                top: 10px;
+                left: 10px;
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <section class="chat-hero">
+        <div class="flex justify-center items-center gap-4 mb-8 animated-element delay-100">
+            <img src="images/comsats-logo.svg" alt="CUI Logo" class="logo-mini">
+            <h1 class="page-title animated-element delay-300"><span style="color:#d1d5db">CUI</span> <span
+                    style="color:var(--electric-blue)">Campus Bot</span></h1>
+        </div>
+        <div class="max-w-4xl w-full mx-auto chat-card animated-element delay-500">
+            <div class="chat-inner">
+                <div class="status-bar"><span class="indicator pulse-glow"></span><span
+                        style="color:var(--cui-accent-green)" class="font-mono">STATUS: Active | Session
+                        Established</span></div>
+                <div id="chat-messages" class="messages-wrapper" aria-live="polite"></div>
+                <form class="input-row" onsubmit="sendMessage(event)">
+                    <input id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" />
+                    <button type="submit" class="send-btn" aria-label="Send message">
+                        <span>Send</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+    <script src="script.js"></script>
+    <script>
+        function sendMessage(e) { if (e) e.preventDefault(); const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text) return; appendMsg(text, 'user'); input.value = ''; setTimeout(() => { appendMsg('Processing your request...', 'bot'); }, 400); }
+        function linkifyText(text) { const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); return escaped.replace(/(https?:\/\/[^\s)<>]+)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #00e5ff; text-decoration: underline; word-break: break-all;">$1</a>'); }
+        function appendMsg(text, type) { const wrap = document.getElementById('chat-messages'); const div = document.createElement('div'); div.className = 'msg ' + type + ' animated-element'; div.innerHTML = linkifyText(text); wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight; }
+        // Seed welcome
+        appendMsg('Welcome! Ask me anything about CUI campus services.', 'bot');
+    </script>
+</body>
+
+</html>

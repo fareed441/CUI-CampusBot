@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Admin Invitation Registration</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dark-charcoal: #050d14;
+        --electric-blue: #00ffff;
+        --cui-accent-green: #00b1a0;
+        --subtle-gray: #1f2937;
+      }
+
+      body {
+        background-color: var(--dark-charcoal);
+        font-family: 'Inter', sans-serif;
+        color: #fff;
+      }
+
+      .page-wrap {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        background-image:
+          linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)),
+          url('/static/images/c.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      .panel {
+        width: 100%;
+        max-width: 36rem;
+        background: #0d1117;
+        border: 2px solid var(--electric-blue);
+        border-radius: 1rem;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.22);
+        padding: 1.5rem;
+      }
+
+      .title {
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        font-weight: 800;
+        color: var(--electric-blue);
+      }
+
+      .form-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+        display: block;
+      }
+
+      .form-control {
+        width: 100%;
+        background: #101721;
+        border: 1px solid #1f2937;
+        color: #e5e7eb;
+        border-radius: 0.65rem;
+        padding: 0.75rem 1rem;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .form-control:focus {
+        border-color: var(--electric-blue);
+        box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.15);
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        font-weight: 700;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.75rem;
+        padding: 0.9rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .btn-primary:hover {
+        background: rgba(0, 255, 255, 0.12);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .info-box {
+        background: rgba(6, 182, 212, 0.12);
+        border: 1px solid rgba(6, 182, 212, 0.5);
+        color: #67e8f9;
+        border-radius: 0.65rem;
+        padding: 0.75rem;
+      }
+
+      .error-box {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.55);
+        color: #fecaca;
+        border-radius: 0.65rem;
+        padding: 0.75rem;
+      }
+
+      .success-box {
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.5);
+        color: #a7f3d0;
+        border-radius: 0.65rem;
+        padding: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="page-wrap">
+      <div class="panel">
+        <h1 class="title">Admin Invitation Registration</h1>
+        <p class="text-gray-400 text-sm mt-2 mb-6">
+          Complete your invited admin account setup.
+        </p>
+
+        <div id="tokenInfo" class="info-box text-sm mb-4 hidden"></div>
+        <div id="errorBox" class="error-box text-sm mb-4 hidden"></div>
+        <div id="successBox" class="success-box text-sm mb-4 hidden"></div>
+
+        <form id="registerForm" class="space-y-4">
+          <div>
+            <label class="form-label" for="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              minlength="3"
+              maxlength="50"
+              required
+              class="form-control"
+              placeholder="Choose your username"
+            />
+          </div>
+
+          <div>
+            <label class="form-label" for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              required
+              class="form-control"
+              placeholder="Create a strong password"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              Use 12+ chars with uppercase, lowercase, number, and special character.
+            </p>
+          </div>
+
+          <div>
+            <label class="form-label" for="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              required
+              class="form-control"
+              placeholder="Re-enter your password"
+            />
+          </div>
+
+          <button id="submitBtn" type="submit" class="btn-primary">
+            Complete Registration
+          </button>
+        </form>
+
+        <div class="mt-5 text-sm text-gray-400">
+          Already registered?
+          <a href="/login" class="text-cyan-300 hover:text-cyan-200">Go to login</a>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      function getQueryToken() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('token') || '';
+      }
+
+      const token = getQueryToken();
+      const form = document.getElementById('registerForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const tokenInfo = document.getElementById('tokenInfo');
+      const errorBox = document.getElementById('errorBox');
+      const successBox = document.getElementById('successBox');
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.remove('hidden');
+      }
+
+      function clearError() {
+        errorBox.classList.add('hidden');
+        errorBox.textContent = '';
+      }
+
+      function showSuccess(message) {
+        successBox.textContent = message;
+        successBox.classList.remove('hidden');
+      }
+
+      if (!token) {
+        showError('Invitation token is missing in URL. Please use the latest invite email link.');
+        submitBtn.disabled = true;
+      } else {
+        tokenInfo.textContent = 'Invite token detected. You can now complete registration.';
+        tokenInfo.classList.remove('hidden');
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearError();
+        successBox.classList.add('hidden');
+
+        if (!token) {
+          showError('Invitation token is missing.');
+          return;
+        }
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!username) {
+          showError('Username is required.');
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          showError('Passwords do not match.');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registering...';
+
+        try {
+          const response = await fetch('/admin/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, username, password }),
+          });
+
+          const payload = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            showError(payload.detail || payload.message || 'Registration failed.');
+            return;
+          }
+
+          showSuccess(payload.message || 'Registration completed successfully. Redirecting to login...');
+          form.reset();
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1800);
+        } catch (error) {
+          showError('Unable to connect to server. Please try again.');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Complete Registration';
+        }
+      });
+    </script>
+  </body>
+</html>

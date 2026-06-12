@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Live Chat</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dark-charcoal: #050d14;
+        --electric-blue: #00ffff;
+        --cui-primary-dark: #003d72;
+        --cui-accent-green: #00b1a0;
+        --subtle-gray: #1f2937;
+      }
+
+      body {
+        background-color: var(--dark-charcoal);
+        font-family: 'Inter', sans-serif;
+        color: white;
+        overflow-x: hidden;
+      }
+
+      @keyframes fadeInSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(25px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animated-element {
+        opacity: 0;
+        animation: fadeInSlideUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+
+      .delay-100 {
+        animation-delay: 0.1s;
+      }
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+      .delay-500 {
+        animation-delay: 0.5s;
+      }
+      .delay-700 {
+        animation-delay: 0.7s;
+      }
+
+      @keyframes pulseGlow {
+        0% {
+          box-shadow: 0 0 10px rgba(0, 255, 255, 0.55);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(0, 255, 255, 0.95);
+        }
+        100% {
+          box-shadow: 0 0 10px rgba(0, 255, 255, 0.55);
+        }
+      }
+
+      .pulse-glow {
+        animation: pulseGlow 2.8s infinite ease-in-out;
+      }
+
+      .chat-hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 4.5rem 1rem 2rem;
+        background-image:
+          linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)),
+          url('/static/images/c.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      .chat-card {
+        background-color: var(--subtle-gray);
+        border: 3px solid var(--electric-blue);
+        border-radius: 1rem;
+        position: relative;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+      }
+
+      .chat-inner {
+        background: #0d1117;
+        border: 1px solid #1f2937;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem 1.25rem;
+      }
+
+      .status-bar {
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.65rem;
+        margin-bottom: 0.85rem;
+        border-bottom: 1px solid #1f2937;
+        color: #6b7280;
+      }
+
+      .status-bar span.indicator {
+        width: 0.65rem;
+        height: 0.65rem;
+        background: #00ff9d;
+        border-radius: 50%;
+      }
+
+      .messages-wrapper {
+        height: 50vh;
+        max-height: 500px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        scrollbar-width: thin;
+      }
+
+      .msg {
+        font-size: 0.85rem;
+        line-height: 1.4rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0.65rem;
+        max-width: 80%;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+      }
+
+      .msg.user {
+        align-self: flex-end;
+        background: rgba(0, 255, 255, 0.12);
+        color: var(--electric-blue);
+        border: 1px solid rgba(0, 255, 255, 0.4);
+      }
+
+      .msg.bot {
+        align-self: flex-start;
+        background: #1f2937;
+        color: #d1d5db;
+        border: 1px solid #2d3d4d;
+      }
+
+      .msg.bot.typing {
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      /* Quick feedback buttons */
+      .chat-fb-row {
+        display: flex;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .chat-fb-btn {
+        background: none;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 0.4rem;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.78rem;
+        cursor: pointer;
+        color: #9ca3af;
+        transition: all 0.15s;
+      }
+      .chat-fb-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e5e7eb;
+      }
+      .chat-fb-btn.selected-up {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: #10b981;
+        color: #10b981;
+      }
+      .chat-fb-btn.selected-down {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: #ef4444;
+        color: #ef4444;
+      }
+
+      /* RTL/LTR Text Direction Styles */
+      .msg-rtl {
+        direction: rtl;
+        text-align: right;
+        unicode-bidi: plaintext;
+        font-family: 'Noto Naskh Arabic', 'Inter', sans-serif;
+      }
+
+      .msg-ltr {
+        direction: ltr;
+        text-align: left;
+        unicode-bidi: plaintext;
+        font-family: 'Inter', sans-serif;
+      }
+
+      .msg-rtl p,
+      .msg-ltr p {
+        margin: 0;
+      }
+
+      .input-row {
+        position: relative;
+        display: block;
+        background: #101721;
+        border: 1px solid #1f2937;
+        border-radius: 0.9rem;
+        padding: 0.35rem 0.9rem 0.35rem 1rem;
+        margin-top: 1rem;
+      }
+
+      .input-row input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #e5e7eb;
+        font-size: 0.95rem;
+        padding: 0.65rem 3.4rem 0.65rem 0.1rem;
+      }
+
+      .send-btn {
+        position: absolute;
+        top: 50%;
+        right: 0.65rem;
+        transform: translateY(-50%);
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        height: 2.3rem;
+        padding: 0 0.9rem;
+        border-radius: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        transition:
+          background 0.2s,
+          box-shadow 0.2s,
+          transform 0.15s;
+        cursor: pointer;
+      }
+
+      .send-btn:hover {
+        background: rgba(0, 255, 255, 0.15);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        transform: translateY(calc(-50% - 1px));
+      }
+
+      .send-btn:active {
+        transform: translateY(-50%);
+      }
+
+      .send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Language Selector Styles */
+      .language-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: #101721;
+        border: 1px solid #1f2937;
+        border-radius: 0.6rem;
+      }
+
+      .language-selector label {
+        color: #9ca3af;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .language-selector select {
+        background: #0d1117;
+        color: var(--electric-blue);
+        border: 1px solid var(--electric-blue);
+        border-radius: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        outline: none;
+        transition: box-shadow 0.2s;
+      }
+
+      .language-selector select:focus {
+        box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+      }
+
+      .language-selector select option {
+        background: #0d1117;
+        color: #e5e7eb;
+      }
+
+      .logo-mini {
+        width: 48px;
+        height: 48px;
+      }
+
+      .page-title {
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 900;
+        margin-bottom: 1.75rem;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 60;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        text-decoration: none;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        transition: background 0.2s;
+      }
+
+      .back-link:hover {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      @media (max-width: 768px) {
+        .chat-hero {
+          padding: 3.5rem 0.75rem 1.5rem;
+        }
+        .page-title {
+          font-size: 2.2rem;
+        }
+        .logo-mini {
+          width: 36px;
+          height: 36px;
+        }
+        .chat-card {
+          width: 100%;
+          border-width: 2px;
+        }
+        .chat-inner {
+          padding: 0.75rem;
+        }
+        .messages-wrapper {
+          height: 55vh;
+          max-height: none;
+        }
+        .msg {
+          max-width: 90%;
+          font-size: 0.82rem;
+        }
+        .language-selector {
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .language-selector select {
+          flex: 1;
+          min-width: 0;
+        }
+        .input-row {
+          padding: 0.25rem 0.6rem 0.25rem 0.75rem;
+        }
+        .input-row input {
+          font-size: 0.9rem;
+          padding-right: 3rem;
+        }
+        .send-btn {
+          height: 2.1rem;
+          padding: 0 0.65rem;
+          font-size: 0.7rem;
+          right: 0.45rem;
+        }
+        .back-link {
+          top: 10px;
+          left: 10px;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .chat-hero {
+          padding: 3rem 0.5rem 1rem;
+        }
+        .page-title {
+          font-size: 1.8rem;
+        }
+        .logo-mini {
+          width: 32px;
+          height: 32px;
+        }
+        .chat-card {
+          border-radius: 0.75rem;
+        }
+        .chat-inner {
+          padding: 0.6rem;
+          border-radius: 0.55rem;
+        }
+        .status-bar {
+          font-size: 0.65rem;
+          padding-bottom: 0.45rem;
+          margin-bottom: 0.65rem;
+        }
+        .messages-wrapper {
+          height: 50vh;
+          gap: 0.4rem;
+        }
+        .msg {
+          max-width: 92%;
+          font-size: 0.78rem;
+          padding: 0.5rem 0.6rem;
+          line-height: 1.35rem;
+        }
+        .language-selector {
+          padding: 0.4rem 0.5rem;
+          margin-bottom: 0.65rem;
+        }
+        .language-selector label {
+          font-size: 0.72rem;
+        }
+        .language-selector select {
+          font-size: 0.78rem;
+          padding: 0.3rem 0.5rem;
+        }
+        .input-row input {
+          font-size: 0.85rem;
+          padding: 0.5rem 2.8rem 0.5rem 0.1rem;
+        }
+        .send-btn {
+          height: 1.9rem;
+          padding: 0 0.5rem;
+          font-size: 0.65rem;
+          right: 0.35rem;
+        }
+        .send-btn span {
+          display: none;
+        }
+        .chat-fb-btn {
+          font-size: 0.7rem;
+          padding: 0.15rem 0.4rem;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .page-title {
+          font-size: 1.5rem;
+        }
+        .chat-hero {
+          padding-top: 2.5rem;
+        }
+        .messages-wrapper {
+          height: 45vh;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/" class="back-link">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </a>
+
+    <section class="chat-hero">
+      <div
+        class="flex justify-center items-center gap-4 mb-8 animated-element delay-100"
+      >
+        <img
+          src="/static/images/comsats-logo.svg"
+          alt="CUI Logo"
+          class="logo-mini"
+        />
+        <h1 class="page-title animated-element delay-300">
+          <span style="color: #d1d5db">CUI</span>
+          <span style="color: var(--electric-blue)">Campus Bot</span>
+        </h1>
+      </div>
+      <div
+        class="max-w-4xl w-full mx-auto chat-card animated-element delay-500"
+      >
+        <div class="chat-inner">
+          <div class="status-bar">
+            <span class="indicator pulse-glow"></span>
+            <span style="color: var(--cui-accent-green)" class="font-mono"
+              >STATUS: Active | Session Established</span
+            >
+          </div>
+
+          <!-- Language Selector for Multilingual Support -->
+          <div class="language-selector">
+            <label for="language-select">🌐 Response Language:</label>
+            <select id="language-select">
+              <option value="en" selected>English</option>
+              <option value="ur">اردو (Urdu)</option>
+              <option value="roman">Roman Urdu (Latin)</option>
+              <option value="auto">🔄 Auto Detect</option>
+            </select>
+          </div>
+
+          <div
+            id="chat-messages"
+            class="messages-wrapper"
+            aria-live="polite"
+          ></div>
+          <form id="chat-form" class="input-row" onsubmit="sendMessage(event)">
+            <input
+              id="chat-input"
+              type="text"
+              placeholder="Type your message..."
+              autocomplete="off"
+            />
+            <button
+              type="submit"
+              id="send-btn"
+              class="send-btn"
+              aria-label="Send message"
+            >
+              <span>Send</span>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9"></polygon>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const chatMessages = document.getElementById('chat-messages');
+      const chatInput = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('send-btn');
+      const languageSelect = document.getElementById('language-select');
+
+      // Store selected language in localStorage for persistence
+      const savedLang = localStorage.getItem('cui_chat_language');
+      if (savedLang) {
+        languageSelect.value = savedLang;
+      }
+
+      languageSelect.addEventListener('change', function () {
+        localStorage.setItem('cui_chat_language', this.value);
+      });
+
+      /**
+       * Detect if text contains Urdu using Unicode ranges
+       * Urdu primarily uses Arabic script (U+0600-U+06FF) and Arabic Extended-A (U+08A0-U+08FF)
+       */
+      function containsUrdu(text) {
+        // Urdu/Arabic script Unicode ranges
+        const urduRegex =
+          /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+        return urduRegex.test(text);
+      }
+
+      /**
+       * Get text direction based on language and content
+       * @param {string} text - The message text
+       * @param {string} lang - Language code: 'en', 'ur', 'roman', or 'auto'
+       * @returns {object} {dir: 'rtl'|'ltr'|'auto', lang: 'ur'|'en', cssClass: 'msg-rtl'|'msg-ltr'}
+       */
+      function getTextDirection(text, lang = 'auto') {
+        // Explicit Urdu selection
+        if (lang === 'ur') {
+          return { dir: 'rtl', lang: 'ur', cssClass: 'msg-rtl' };
+        }
+        // Explicit English or Roman Urdu
+        if (lang === 'en' || lang === 'roman') {
+          return { dir: 'ltr', lang: 'en', cssClass: 'msg-ltr' };
+        }
+        // Auto-detect: check for Urdu characters
+        if (containsUrdu(text)) {
+          return { dir: 'rtl', lang: 'ur', cssClass: 'msg-rtl' };
+        }
+        // Default to LTR
+        return { dir: 'ltr', lang: 'en', cssClass: 'msg-ltr' };
+      }
+
+      /**
+       * Apply text direction to an element
+       */
+      function applyTextDirection(element, text, lang) {
+        const dirInfo = getTextDirection(text, lang);
+        element.setAttribute('dir', dirInfo.dir);
+        element.setAttribute('lang', dirInfo.lang);
+        element.classList.add(dirInfo.cssClass);
+      }
+
+      /**
+       * Convert plain-text URLs into clickable <a> links (opens in new tab)
+       */
+      function linkifyText(text) {
+        // Escape HTML first to prevent XSS
+        const escaped = text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        // Match URLs (http, https, ftp) and make them clickable
+        return escaped.replace(
+          /(https?:\/\/[^\s)<>]+)/gi,
+          '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #00e5ff; text-decoration: underline; word-break: break-all;">$1</a>',
+        );
+      }
+
+      function appendMsg(text, type, isTyping = false, lang = null) {
+        const div = document.createElement('div');
+        div.className =
+          'msg ' + type + (isTyping ? ' typing' : '') + ' animated-element';
+        // Determine language for direction
+        const effectiveLang =
+          lang || (type === 'user' ? languageSelect.value : null);
+
+        // Apply text direction (RTL for Urdu, LTR otherwise)
+        if (!isTyping) {
+          applyTextDirection(div, text, effectiveLang);
+        } else {
+          div.classList.add('msg-ltr');
+        }
+        // Use innerHTML with linkified text so URLs are clickable
+        div.innerHTML = linkifyText(text);
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return div;
+      }
+
+      function appendMsgWithSources(text, sources, type, lang = null) {
+        const div = document.createElement('div');
+        div.className = 'msg ' + type + ' animated-element';
+
+        // Apply text direction based on response language or content detection
+        const effectiveLang = lang || languageSelect.value;
+        applyTextDirection(div, text, effectiveLang);
+
+        // Main answer text — linkify URLs so they are clickable
+        const textP = document.createElement('p');
+        textP.innerHTML = linkifyText(text);
+        div.appendChild(textP);
+
+        // Sources section - DISABLED (hidden from users)
+        // if (sources && sources.length > 0) {
+        //   const sourcesDiv = document.createElement('div');
+        //   sourcesDiv.className = 'sources';
+        //   sourcesDiv.style.cssText =
+        //     'margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid rgba(0,255,255,0.2); font-size: 0.8rem; color: #9ca3af;';
+
+        //   const sourcesLabel = document.createElement('span');
+        //   sourcesLabel.textContent = 'Sources: ';
+        //   sourcesLabel.style.color = 'var(--electric-blue)';
+        //   sourcesDiv.appendChild(sourcesLabel);
+
+        //   sources.forEach((src, idx) => {
+        //     const srcSpan = document.createElement('span');
+        //     srcSpan.textContent = src + (idx < sources.length - 1 ? ', ' : '');
+        //     sourcesDiv.appendChild(srcSpan);
+        //   });
+
+        //   div.appendChild(sourcesDiv);
+        // }
+
+        // Quick feedback buttons for bot answers
+        if (type === 'bot') {
+          const fbRow = document.createElement('div');
+          fbRow.className = 'chat-fb-row';
+          const btnUp = document.createElement('button');
+          btnUp.className = 'chat-fb-btn';
+          btnUp.textContent = '👍 Helpful';
+          btnUp.onclick = function () {
+            btnUp.classList.add('selected-up');
+            btnDown.disabled = true;
+            btnDown.style.opacity = '0.4';
+            btnUp.disabled = true;
+            // no server call needed for positive
+          };
+          const btnDown = document.createElement('button');
+          btnDown.className = 'chat-fb-btn';
+          btnDown.textContent = '👎 Not Helpful';
+          btnDown.onclick = function () {
+            btnDown.classList.add('selected-down');
+            btnUp.disabled = true;
+            btnUp.style.opacity = '0.4';
+            btnDown.disabled = true;
+            // Open feedback form with pre-filled module=Chatbot, category=Chatbot Wrong Answer
+            window.open(
+              '/feedback?module=Chatbot&category=Chatbot+Wrong+Answer&page_context=chatbot',
+              '_blank',
+            );
+          };
+          fbRow.appendChild(btnUp);
+          fbRow.appendChild(btnDown);
+          div.appendChild(fbRow);
+        }
+
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return div;
+      }
+
+      function removeTypingIndicator() {
+        const typing = chatMessages.querySelector('.msg.bot.typing');
+        if (typing) typing.remove();
+      }
+
+      async function sendMessage(e) {
+        if (e) e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        // Add user message with auto-detection for RTL (detects Urdu even without language selection)
+        appendMsg(text, 'user', false, 'auto');
+        chatInput.value = '';
+        sendBtn.disabled = true;
+
+        // Add typing indicator
+        appendMsg('Thinking...', 'bot', true);
+
+        try {
+          const selectedLanguage = languageSelect.value;
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: text,
+              preferred_language: selectedLanguage,
+            }),
+          });
+
+          removeTypingIndicator();
+
+          const data = await response.json();
+
+          if (data.answer) {
+            // Use response language from API or selected language
+            const responseLang = data.language || selectedLanguage;
+            appendMsgWithSources(
+              data.answer,
+              data.sources,
+              'bot',
+              responseLang,
+            );
+          } else if (data.detail) {
+            appendMsg('Error: ' + data.detail, 'bot', false, 'en');
+          } else {
+            appendMsg('Sorry, something went wrong.', 'bot', false, 'en');
+          }
+        } catch (err) {
+          removeTypingIndicator();
+          appendMsg('Network error. Please try again.', 'bot');
+          console.error(err);
+        }
+
+        sendBtn.disabled = false;
+        chatInput.focus();
+      }
+
+      // Welcome message - no login required (multilingual)
+      const welcomeMessages = {
+        en: 'Welcome! Ask me anything about CUI campus services, admissions, timetables, scholarships, and more. No login required! Use the language selector above to choose your preferred response language.',
+        ur: 'خوش آمدید! CUI کیمپس سروسز، داخلے، ٹائم ٹیبل، اسکالرشپس اور مزید کے بارے میں کچھ بھی پوچھیں۔ لاگ ان کی ضرورت نہیں!',
+        roman:
+          'Khush amdeed! CUI campus services, admissions, timetables, scholarships aur kuch bhi puchho. Login ki zaroorat nahi!',
+        auto: 'Welcome! I will respond in the same language you use. Ask me anything about CUI campus services, admissions, timetables, scholarships, and more.',
+      };
+      const welcomeLang = languageSelect.value;
+      appendMsg(
+        welcomeMessages[welcomeLang] || welcomeMessages.en,
+        'bot',
+        false,
+        welcomeLang === 'auto' ? 'en' : welcomeLang,
+      );
+    </script>
+  </body>
+</html>

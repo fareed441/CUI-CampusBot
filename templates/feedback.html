@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Feedback</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dark-charcoal: #050d14;
+        --electric-blue: #00ffff;
+        --cui-primary-dark: #003d72;
+        --cui-accent-green: #00b1a0;
+        --subtle-gray: #1f2937;
+      }
+
+      body {
+        background-color: var(--dark-charcoal);
+        font-family: 'Inter', sans-serif;
+        color: #fff;
+        overflow-x: hidden;
+      }
+
+      @keyframes fadeInSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(25px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animated-element {
+        opacity: 0;
+        animation: fadeInSlideUp 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+
+      .delay-100 {
+        animation-delay: 0.1s;
+      }
+
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+
+      .delay-500 {
+        animation-delay: 0.5s;
+      }
+
+      .delay-700 {
+        animation-delay: 0.7s;
+      }
+
+      /* Hero background */
+      .feedback-hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 1rem;
+        background-image:
+          linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)),
+          url('/static/images/b.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      /* Card */
+      .feedback-card {
+        background-color: var(--subtle-gray);
+        border: 3px solid var(--electric-blue);
+        border-radius: 1rem;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+        max-width: 36rem;
+        width: 100%;
+      }
+
+      .feedback-inner {
+        background: #0d1117;
+        border: 1px solid #1f2937;
+        border-radius: 0.9rem;
+        padding: 1.25rem 1.25rem 1.5rem;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .logo-mini {
+        width: 48px;
+        height: 48px;
+      }
+
+      .title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 900;
+      }
+
+      /* Form */
+      .form-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+        display: block;
+      }
+
+      .form-control {
+        width: 100%;
+        background: #101721;
+        border: 1px solid #1f2937;
+        color: #e5e7eb;
+        border-radius: 0.65rem;
+        padding: 0.75rem 1rem;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .form-control::placeholder {
+        color: #6b7280;
+      }
+
+      .form-control:focus {
+        border-color: var(--electric-blue);
+        box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.15);
+      }
+
+      textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      /* Button matches site */
+      .submit-btn {
+        display: block;
+        width: 100%;
+        font-weight: 700;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+        transition:
+          transform 0.15s,
+          box-shadow 0.2s,
+          background-color 0.2s;
+      }
+
+      .submit-btn:hover {
+        background: rgba(0, 255, 255, 0.12);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+        transform: translateY(-1px);
+      }
+
+      .submit-btn:active {
+        transform: translateY(0);
+      }
+
+      .success {
+        display: none;
+        margin-top: 0.75rem;
+        color: #a7f3d0;
+      }
+
+      .success.show {
+        display: block;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 60;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        text-decoration: none;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        transition: background 0.2s;
+      }
+
+      .back-link:hover {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .feedback-hero {
+          padding: 3.5rem 0.75rem 2rem;
+        }
+        .feedback-card {
+          max-width: 100%;
+        }
+        .feedback-inner {
+          padding: 1rem;
+        }
+        .title {
+          font-size: 1.8rem;
+        }
+        .logo-mini {
+          width: 40px;
+          height: 40px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .feedback-hero {
+          padding: 3rem 0.5rem 1.5rem;
+        }
+        .feedback-inner {
+          padding: 0.85rem;
+        }
+        .title {
+          font-size: 1.5rem;
+        }
+        .logo-mini {
+          width: 36px;
+          height: 36px;
+        }
+        .form-control {
+          padding: 0.65rem 0.85rem;
+          font-size: 0.88rem;
+        }
+        textarea.form-control {
+          min-height: 100px;
+        }
+        .submit-btn {
+          padding: 0.85rem 1rem;
+          font-size: 0.9rem;
+        }
+        .back-link {
+          top: 10px;
+          left: 10px;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+        .feedback-name-email-grid {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/" class="back-link">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </a>
+
+    <section class="feedback-hero">
+      <div class="feedback-card animated-element delay-300 mx-auto">
+        <div class="feedback-inner">
+          <div class="header animated-element delay-300">
+            <img
+              src="/static/images/comsats-logo.svg"
+              alt="CUI Logo"
+              class="logo-mini"
+            />
+            <h1 class="title">
+              <span style="color: #d1d5db">Share</span>
+              <span style="color: var(--electric-blue)">Feedback</span>
+            </h1>
+          </div>
+          <form id="feedback-form" class="space-y-5 animated-element delay-500">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
+              class="feedback-name-email-grid"
+            >
+              <div>
+                <label for="name" class="form-label"
+                  >Your Name (Optional)</label
+                >
+                <input
+                  id="name"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter your name"
+                  maxlength="100"
+                />
+              </div>
+              <div>
+                <label for="email" class="form-label">Email (Optional)</label>
+                <input
+                  id="email"
+                  type="email"
+                  class="form-control"
+                  placeholder="your.email@example.com"
+                  maxlength="100"
+                />
+              </div>
+            </div>
+            <div>
+              <label for="feedback_type" class="form-label"
+                >Feedback Type</label
+              >
+              <select id="feedback_type" class="form-control" required>
+                <option value="general">General Feedback</option>
+                <option value="suggestion">Suggestion</option>
+                <option value="bug">Bug Report</option>
+                <option value="complaint">Complaint</option>
+              </select>
+            </div>
+            <div>
+              <label for="subject" class="form-label">Subject</label>
+              <input
+                id="subject"
+                type="text"
+                class="form-control"
+                placeholder="Brief subject of your feedback"
+                required
+                minlength="3"
+                maxlength="200"
+              />
+            </div>
+            <div>
+              <label for="message" class="form-label">Your Feedback</label>
+              <textarea
+                id="message"
+                class="form-control"
+                placeholder="Describe your feedback in detail..."
+                required
+                minlength="10"
+                maxlength="2000"
+              ></textarea>
+            </div>
+            <div>
+              <label class="form-label">Rating (Optional)</label>
+              <div
+                id="ratingStars"
+                style="display: flex; gap: 0.5rem; margin-top: 0.5rem"
+              >
+                <span data-rating="1" style="font-size: 1.5rem; cursor: pointer"
+                  >☆</span
+                >
+                <span data-rating="2" style="font-size: 1.5rem; cursor: pointer"
+                  >☆</span
+                >
+                <span data-rating="3" style="font-size: 1.5rem; cursor: pointer"
+                  >☆</span
+                >
+                <span data-rating="4" style="font-size: 1.5rem; cursor: pointer"
+                  >☆</span
+                >
+                <span data-rating="5" style="font-size: 1.5rem; cursor: pointer"
+                  >☆</span
+                >
+              </div>
+              <input type="hidden" id="rating" value="" />
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">
+              Send Feedback
+            </button>
+            <p id="feedback-success" class="success">
+              Thanks! Your feedback has been received.
+            </p>
+            <p
+              id="feedback-error"
+              class="success"
+              style="color: #f87171; display: none"
+            ></p>
+          </form>
+
+          <!-- Notice for anonymous feedback -->
+          <div
+            style="
+              margin-top: 1rem;
+              padding: 0.75rem;
+              background: rgba(0, 255, 255, 0.1);
+              border-radius: 0.5rem;
+              border: 1px solid rgba(0, 255, 255, 0.2);
+            "
+          >
+            <p
+              style="
+                color: #9ca3af;
+                font-size: 0.8rem;
+                text-align: center;
+                margin: 0;
+              "
+            >
+              💡
+              <span style="color: var(--electric-blue)"
+                >No login required!</span
+              >
+              Your feedback helps us improve the CUI Campus Bot.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      const form = document.getElementById('feedback-form');
+      const success = document.getElementById('feedback-success');
+      const errorMsg = document.getElementById('feedback-error');
+      const submitBtn = document.getElementById('submitBtn');
+      let selectedRating = null;
+
+      // Star rating functionality
+      document.querySelectorAll('#ratingStars span').forEach((star) => {
+        star.addEventListener('click', () => {
+          selectedRating = parseInt(star.dataset.rating);
+          document.getElementById('rating').value = selectedRating;
+
+          document.querySelectorAll('#ratingStars span').forEach((s, index) => {
+            s.textContent = index < selectedRating ? '★' : '☆';
+            s.style.color = index < selectedRating ? '#fbbf24' : 'inherit';
+          });
+        });
+
+        star.addEventListener('mouseenter', () => {
+          const rating = parseInt(star.dataset.rating);
+          document.querySelectorAll('#ratingStars span').forEach((s, index) => {
+            s.style.color = index < rating ? '#fbbf24' : 'inherit';
+          });
+        });
+
+        star.addEventListener('mouseleave', () => {
+          document.querySelectorAll('#ratingStars span').forEach((s, index) => {
+            s.style.color = index < selectedRating ? '#fbbf24' : 'inherit';
+          });
+        });
+      });
+
+      // Form submission - No login required for students
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        const feedbackData = {
+          feedback_type: document.getElementById('feedback_type').value,
+          subject: document.getElementById('subject').value,
+          message: document.getElementById('message').value,
+          rating: selectedRating,
+          name: document.getElementById('name').value || null,
+          email: document.getElementById('email').value || null,
+        };
+
+        try {
+          const response = await fetch('/api/feedback/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(feedbackData),
+          });
+
+          if (response.ok) {
+            success.classList.add('show');
+            form.reset();
+            selectedRating = null;
+            document.querySelectorAll('#ratingStars span').forEach((s) => {
+              s.textContent = '☆';
+              s.style.color = 'inherit';
+            });
+            setTimeout(() => success.classList.remove('show'), 3500);
+          } else {
+            const err = await response.json();
+            throw new Error(err.detail || 'Failed to submit feedback');
+          }
+        } catch (error) {
+          errorMsg.textContent = error.message;
+          errorMsg.style.display = 'block';
+          setTimeout(() => {
+            errorMsg.style.display = 'none';
+          }, 3500);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Feedback';
+        }
+      });
+    </script>
+  </body>
+</html>

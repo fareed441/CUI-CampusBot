@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI Campus Bot | Admin Login</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dark-charcoal: #050d14;
+        --electric-blue: #00ffff;
+        --cui-accent-green: #00b1a0;
+        --subtle-gray: #1f2937;
+      }
+
+      body {
+        background-color: var(--dark-charcoal);
+        font-family: 'Inter', sans-serif;
+        color: #fff;
+        overflow-x: hidden;
+      }
+
+      @keyframes fadeInSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(25px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animated-element {
+        opacity: 0;
+        animation: fadeInSlideUp 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+
+      .delay-100 {
+        animation-delay: 0.1s;
+      }
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+      .delay-500 {
+        animation-delay: 0.5s;
+      }
+
+      .login-hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 1rem;
+        background-image:
+          linear-gradient(rgba(5, 13, 20, 0.88), rgba(5, 13, 20, 0.92)),
+          url('/static/images/c.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      .login-card {
+        background-color: var(--subtle-gray);
+        border: 3px solid var(--electric-blue);
+        border-radius: 1rem;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+        max-width: 32rem;
+        width: 100%;
+      }
+
+      .login-inner {
+        background: #0d1117;
+        border: 1px solid #1f2937;
+        border-radius: 0.9rem;
+        padding: 1.25rem 1.25rem 1.5rem;
+      }
+
+      .title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 900;
+        margin-bottom: 1rem;
+      }
+
+      .form-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+        display: block;
+      }
+
+      .form-control {
+        width: 100%;
+        background: #101721;
+        border: 1px solid #1f2937;
+        color: #e5e7eb;
+        border-radius: 0.65rem;
+        padding: 0.75rem 1rem;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .form-control::placeholder {
+        color: #6b7280;
+      }
+
+      .form-control:focus {
+        border-color: var(--electric-blue);
+        box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.15);
+      }
+
+      .form-control.input-error {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+      }
+
+      .submit-btn {
+        display: block;
+        width: 100%;
+        font-weight: 700;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          box-shadow 0.2s,
+          background-color 0.2s;
+      }
+
+      .submit-btn:hover {
+        background: rgba(0, 255, 255, 0.12);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+        transform: translateY(-1px);
+      }
+
+      .submit-btn:active {
+        transform: translateY(0);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 60;
+        background: #0b1320;
+        color: var(--electric-blue);
+        border: 2px solid var(--electric-blue);
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        text-decoration: none;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        transition: background 0.2s;
+      }
+
+      .back-link:hover {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* Password toggle */
+      .password-wrapper {
+        position: relative;
+      }
+      .password-wrapper .form-control {
+        padding-right: 3rem;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s;
+      }
+
+      .toggle-password:hover {
+        color: var(--electric-blue);
+      }
+
+      .inline-error {
+        color: #fca5a5;
+        font-size: 0.78rem;
+        margin-top: 0.3rem;
+        display: none;
+      }
+
+      .inline-error.visible {
+        display: block;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .login-hero {
+          padding: 3.5rem 0.75rem 2rem;
+        }
+        .login-card {
+          max-width: 100%;
+        }
+        .login-inner {
+          padding: 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .login-hero {
+          padding: 3rem 0.5rem 1.5rem;
+        }
+        .login-inner {
+          padding: 0.85rem;
+        }
+        .title {
+          font-size: 1.5rem;
+        }
+        .form-control {
+          padding: 0.65rem 0.85rem;
+          font-size: 0.88rem;
+        }
+        .submit-btn {
+          padding: 0.85rem 1rem;
+          font-size: 0.9rem;
+        }
+        .back-link {
+          top: 10px;
+          left: 10px;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/" class="back-link">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </a>
+
+    <section class="login-hero">
+      <div class="login-card animated-element delay-300 mx-auto">
+        <div class="login-inner">
+          <h1 class="title">
+            Admin <span style="color: var(--electric-blue)">Login</span>
+          </h1>
+          <form
+            id="login-form"
+            class="space-y-5 animated-element delay-300"
+            novalidate
+          >
+            <!-- Email -->
+            <div>
+              <label for="email" class="form-label">Email</label>
+              <input
+                id="email"
+                type="email"
+                class="form-control"
+                placeholder="fa22-bcs-099@cuivehari.edu.pk"
+                autocomplete="email"
+                required
+              />
+              <p id="email-error" class="inline-error"></p>
+            </div>
+
+            <!-- Password with Show/Hide -->
+            <div>
+              <label for="password" class="form-label">Password</label>
+              <div class="password-wrapper">
+                <input
+                  id="password"
+                  type="password"
+                  class="form-control"
+                  placeholder="Enter password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  aria-label="Show password"
+                  data-target="password"
+                >
+                  <svg
+                    class="eye-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                    ></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <p id="password-error" class="inline-error"></p>
+            </div>
+
+            <button type="submit" id="submit-btn" class="submit-btn">
+              Login
+            </button>
+
+            <p id="login-error" class="text-red-400 text-sm hidden"></p>
+
+            <p style="text-align: center; margin-top: 0.75rem">
+              <a
+                href="/forgot-password"
+                style="
+                  color: var(--electric-blue);
+                  font-size: 0.85rem;
+                  text-decoration: none;
+                  opacity: 0.85;
+                "
+                onmouseover="
+                  this.style.opacity = '1';
+                  this.style.textDecoration = 'underline';
+                "
+                onmouseout="
+                  this.style.opacity = '0.85';
+                  this.style.textDecoration = 'none';
+                "
+              >
+                Forgot Password?
+              </a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      var TOKEN_KEY = 'cui_access_token';
+      var USER_KEY = 'cui_user_info';
+      var ADMIN_ROLES = ['admin', 'super_admin'];
+      var form = document.getElementById('login-form');
+      var submitBtn = document.getElementById('submit-btn');
+      var errorEl = document.getElementById('login-error');
+      var emailInput = document.getElementById('email');
+      var passwordInput = document.getElementById('password');
+      var emailError = document.getElementById('email-error');
+      var passwordError = document.getElementById('password-error');
+
+      /* ── Helpers ──────────────────────────────────── */
+      function escapeHTML(str) {
+        if (typeof str !== 'string') return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+      }
+
+      function showInlineError(el, inputEl, msg) {
+        el.textContent = msg;
+        el.classList.add('visible');
+        if (inputEl) inputEl.classList.add('input-error');
+      }
+
+      function clearInlineError(el, inputEl) {
+        el.textContent = '';
+        el.classList.remove('visible');
+        if (inputEl) inputEl.classList.remove('input-error');
+      }
+
+      function clearAllErrors() {
+        clearInlineError(emailError, emailInput);
+        clearInlineError(passwordError, passwordInput);
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+      }
+
+      function isValidEmail(v) {
+        return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(v);
+      }
+
+      function redirectAfterLogin(role) {
+        if (ADMIN_ROLES.includes(role)) {
+          window.location.href = '/secure-admin-portal/dashboard';
+          return;
+        }
+        window.location.href = '/';
+      }
+
+      /* ── Show / Hide ─────────────────────────────── */
+      document.querySelectorAll('.toggle-password').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var input = document.getElementById(btn.getAttribute('data-target'));
+          if (!input) return;
+          var hidden = input.type === 'password';
+          input.type = hidden ? 'text' : 'password';
+          var svg = btn.querySelector('svg');
+          svg.innerHTML = hidden
+            ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+            : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+          btn.setAttribute(
+            'aria-label',
+            hidden ? 'Hide password' : 'Show password',
+          );
+        });
+      });
+
+      /* ── Clear errors on input ───────────────────── */
+      emailInput.addEventListener('input', function () {
+        clearInlineError(emailError, emailInput);
+        errorEl.classList.add('hidden');
+      });
+      passwordInput.addEventListener('input', function () {
+        clearInlineError(passwordError, passwordInput);
+        errorEl.classList.add('hidden');
+      });
+
+      /* ── Redirect if already logged in ───────────── */
+      (function checkExistingAuth() {
+        var token = localStorage.getItem(TOKEN_KEY);
+        if (token) {
+          fetch('/api/auth/me', {
+            headers: { Authorization: 'Bearer ' + token },
+          })
+            .then(function (r) {
+              if (!r.ok) {
+                throw new Error('Session expired');
+              }
+              return r.json();
+            })
+            .then(function (user) {
+              redirectAfterLogin(user.role || 'user');
+            })
+            .catch(function () {
+              localStorage.removeItem(TOKEN_KEY);
+              localStorage.removeItem(USER_KEY);
+            });
+        }
+      })();
+
+      /* ── Form submit ─────────────────────────────── */
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearAllErrors();
+
+        var email = emailInput.value.trim();
+        var pass = passwordInput.value; // no trim — preserve raw password
+
+        var hasErr = false;
+        if (!email) {
+          showInlineError(emailError, emailInput, 'Email is required.');
+          hasErr = true;
+        } else if (!isValidEmail(email)) {
+          showInlineError(
+            emailError,
+            emailInput,
+            'Please enter a valid email address.',
+          );
+          hasErr = true;
+        }
+
+        if (!pass) {
+          showInlineError(
+            passwordError,
+            passwordInput,
+            'Password is required.',
+          );
+          hasErr = true;
+        }
+
+        if (hasErr) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in\u2026';
+
+        try {
+          var formData = new URLSearchParams();
+          formData.append('username', email);
+          formData.append('password', pass);
+
+          var response = await fetch('/api/auth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData,
+          });
+
+          if (response.ok) {
+            var data = await response.json();
+            var role = data.role || 'user';
+            localStorage.setItem(TOKEN_KEY, data.access_token);
+            localStorage.setItem(
+              USER_KEY,
+              JSON.stringify({ username: email, role: role }),
+            );
+            redirectAfterLogin(role);
+          } else {
+            var errData = await response.json();
+            var detail = errData.detail || 'Login failed. Please try again.';
+            if (response.status === 429) {
+              detail =
+                errData.detail ||
+                'Too many attempts. Please wait before trying again.';
+            }
+            errorEl.textContent = escapeHTML(detail);
+            errorEl.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Login';
+          }
+        } catch (err) {
+          errorEl.textContent = 'Network error. Please try again.';
+          errorEl.classList.remove('hidden');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Login';
+        }
+      });
+    </script>
+  </body>
+</html>

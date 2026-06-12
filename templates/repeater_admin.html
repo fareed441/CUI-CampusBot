@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timetable Admin - Repeater Clash Resolver</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c5282, #4a90c2);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 20px;
+      }
+
+      .sidebar {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .sidebar h2 {
+        font-size: 16px;
+        color: #2c5282;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .search-box {
+        margin-bottom: 15px;
+      }
+
+      .search-box label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+        color: #666;
+      }
+
+      .search-box input,
+      .search-box select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .search-box input:focus,
+      .search-box select:focus {
+        outline: none;
+        border-color: #4a90c2;
+        box-shadow: 0 0 0 3px rgba(74, 144, 194, 0.1);
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: #2c5282;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #1a365d;
+      }
+
+      .btn-secondary {
+        background: #e2e8f0;
+        color: #333;
+      }
+
+      .btn-secondary:hover {
+        background: #cbd5e0;
+      }
+
+      .btn-success {
+        background: #38a169;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #2f855a;
+      }
+
+      .btn-block {
+        width: 100%;
+      }
+
+      .student-info {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+      }
+
+      .student-info h3 {
+        font-size: 14px;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+
+      .student-info p {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 5px;
+      }
+
+      .student-info .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #fed7d7;
+        color: #c53030;
+        border-radius: 4px;
+        font-size: 11px;
+        margin-left: 5px;
+      }
+
+      .main-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .panel h2 {
+        font-size: 16px;
+        color: #2c5282;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel h2 .badge {
+        background: #e2e8f0;
+        color: #4a5568;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .schedule-grid {
+        overflow-x: auto;
+      }
+
+      .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .schedule-table th,
+      .schedule-table td {
+        border: 1px solid #e2e8f0;
+        padding: 8px;
+        text-align: center;
+      }
+
+      .schedule-table th {
+        background: #2c5282;
+        color: white;
+        font-weight: 600;
+      }
+
+      .schedule-table th.day-header {
+        background: #e2e8f0;
+        color: #333;
+        width: 80px;
+      }
+
+      .schedule-table th.break-header {
+        background: #fed7aa;
+        color: #744210;
+      }
+
+      .schedule-table td.day-cell {
+        background: #f8fafc;
+        font-weight: 600;
+      }
+
+      .schedule-table td.break-cell {
+        background: #fed7aa;
+        color: #744210;
+        font-weight: 600;
+      }
+
+      .schedule-table td.class-cell {
+        background: #ebf8ff;
+        cursor: pointer;
+      }
+
+      .schedule-table td.class-cell:hover {
+        background: #bee3f8;
+      }
+
+      .schedule-table td.lab-cell {
+        background: #feebc8;
+      }
+
+      .class-content {
+        font-size: 11px;
+      }
+
+      .class-content .course {
+        font-weight: 600;
+        color: #2c5282;
+      }
+
+      .class-content .room {
+        color: #666;
+      }
+
+      .class-content .teacher {
+        color: #888;
+        font-size: 10px;
+      }
+
+      .course-search {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .course-search input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .alternatives-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .alternative-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+      }
+
+      .alternative-item.feasible {
+        border-left: 4px solid #38a169;
+      }
+
+      .alternative-item.conflicting {
+        border-left: 4px solid #e53e3e;
+      }
+
+      .alternative-item:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .alternative-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .alternative-title {
+        font-weight: 600;
+        color: #2c5282;
+      }
+
+      .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .status-badge.feasible {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+
+      .status-badge.conflicting {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+
+      .alternative-details {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .alternative-details p {
+        margin-bottom: 3px;
+      }
+
+      .clash-reason {
+        background: #fff5f5;
+        color: #c53030;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        margin-top: 8px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e2e8f0;
+        border-top-color: #2c5282;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .message {
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 13px;
+      }
+
+      .message.success {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+
+      .message.error {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+
+      .message.info {
+        background: #bee3f8;
+        color: #2c5282;
+      }
+
+      .stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .stat-item {
+        flex: 1;
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2c5282;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: #666;
+      }
+
+      .multi-course-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px dashed #e2e8f0;
+      }
+
+      .course-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .course-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        background: #ebf8ff;
+        color: #2c5282;
+        border-radius: 15px;
+        font-size: 12px;
+      }
+
+      .course-tag .remove {
+        cursor: pointer;
+        color: #e53e3e;
+        font-weight: bold;
+      }
+
+      .solver-result {
+        background: #f0fff4;
+        border: 1px solid #9ae6b4;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+      }
+
+      .solver-result h4 {
+        color: #22543d;
+        margin-bottom: 10px;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 1024px) {
+        .main-content {
+          grid-template-columns: 280px 1fr;
+          gap: 15px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        .header {
+          padding: 15px 20px;
+          border-radius: 8px;
+        }
+        .header h1 {
+          font-size: 18px;
+        }
+        .main-content {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+        .sidebar {
+          padding: 15px;
+        }
+        .panel {
+          padding: 15px;
+        }
+        .schedule-grid {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .schedule-table {
+          min-width: 600px;
+        }
+        .course-search {
+          flex-direction: column;
+        }
+        .stats {
+          flex-wrap: wrap;
+        }
+        .stat-item {
+          flex: 1 1 calc(50% - 5px);
+          min-width: 0;
+        }
+        .action-buttons {
+          flex-direction: column;
+        }
+        .action-buttons .btn {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 8px;
+        }
+        .header {
+          padding: 12px 15px;
+        }
+        .header h1 {
+          font-size: 15px;
+        }
+        .header p {
+          font-size: 12px;
+        }
+        .sidebar,
+        .panel {
+          padding: 12px;
+        }
+        .btn {
+          padding: 8px 15px;
+          font-size: 13px;
+        }
+        .stat-item {
+          flex: 1 1 100%;
+        }
+        .stat-value {
+          font-size: 20px;
+        }
+        .search-box input,
+        .search-box select {
+          padding: 8px 10px;
+          font-size: 13px;
+        }
+        .course-tags {
+          gap: 5px;
+        }
+        .alternative-item {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎓 Timetable Admin - Repeater Clash Resolver</h1>
+        <p>COMSATS University Islamabad - Vehari Campus</p>
+      </div>
+
+      <div class="main-content">
+        <div class="sidebar">
+          <h2>👤 Search Student</h2>
+          <div class="search-box">
+            <label>Student ID</label>
+            <select id="studentSelect" onchange="loadStudent()">
+              <option value="">-- Select Student --</option>
+            </select>
+          </div>
+
+          <div id="studentInfo" class="student-info" style="display: none">
+            <h3 id="studentName">Student Name</h3>
+            <p><strong>ID:</strong> <span id="studentId"></span></p>
+            <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
+            <p id="repeaterStatus"></p>
+          </div>
+
+          <div style="margin-top: 20px">
+            <h2>📋 Quick Actions</h2>
+            <button
+              class="btn btn-secondary btn-block"
+              onclick="window.open('/api/timetable/batches')"
+              style="margin-bottom: 10px"
+            >
+              View All Batches
+            </button>
+            <button
+              class="btn btn-secondary btn-block"
+              onclick="exportPDF()"
+              style="margin-bottom: 10px"
+            >
+              Export Timetable PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="main-panel">
+          <div class="panel">
+            <h2>📅 Student Schedule</h2>
+            <div id="scheduleContainer">
+              <p class="loading">Select a student to view their schedule</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>
+              🔍 Add Repeat Course
+              <span class="badge" id="suggestionBadge">Layer 1</span>
+            </h2>
+
+            <div class="course-search">
+              <input
+                type="text"
+                id="courseQuery"
+                placeholder="Enter course name (e.g., AI, Database, OS)"
+              />
+              <button class="btn btn-primary" onclick="suggestAlternatives()">
+                Find Alternatives
+              </button>
+            </div>
+
+            <div id="suggestionMessage"></div>
+
+            <div class="stats" id="suggestionStats" style="display: none">
+              <div class="stat-item">
+                <div class="stat-value" id="feasibleCount">0</div>
+                <div class="stat-label">✅ Feasible</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="conflictingCount">0</div>
+                <div class="stat-label">❌ Conflicting</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="processingTime">0</div>
+                <div class="stat-label">ms Processing</div>
+              </div>
+            </div>
+
+            <div id="alternativesList" class="alternatives-list"></div>
+
+            <div
+              class="multi-course-section"
+              id="multiCourseSection"
+              style="display: none"
+            >
+              <h3>🔧 Multi-Course Solver (Layer 2)</h3>
+              <p style="font-size: 13px; color: #666; margin-bottom: 10px">
+                No single-course solution? Add multiple courses and use CP-SAT
+                solver.
+              </p>
+
+              <div class="course-tags" id="courseTags"></div>
+
+              <button
+                class="btn btn-secondary"
+                onclick="addCurrentCourse()"
+                style="margin-bottom: 10px"
+              >
+                + Add Current Course
+              </button>
+
+              <button class="btn btn-success" onclick="solveMultiCourse()">
+                🚀 Solve with CP-SAT
+              </button>
+
+              <div id="solverResult"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // State
+      let currentStudent = null;
+      let currentCourse = null;
+      let multiCourses = [];
+
+      // API base URL
+      const API_BASE = '';
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        loadStudents();
+      });
+
+      async function loadStudents() {
+        try {
+          // In real app, this would be an API call
+          // For demo, we'll use static data
+          const students = [
+            { id: 'S001', name: 'Ali Hassan (Repeater)' },
+            { id: 'S002', name: 'Zara Khan' },
+            { id: 'S003', name: 'Ahmed Raza' },
+          ];
+
+          const select = document.getElementById('studentSelect');
+          students.forEach((s) => {
+            const option = document.createElement('option');
+            option.value = s.id;
+            option.textContent = s.name;
+            select.appendChild(option);
+          });
+        } catch (error) {
+          console.error('Error loading students:', error);
+        }
+      }
+
+      async function loadStudent() {
+        const studentId = document.getElementById('studentSelect').value;
+        if (!studentId) {
+          document.getElementById('studentInfo').style.display = 'none';
+          document.getElementById('scheduleContainer').innerHTML =
+            '<p class="loading">Select a student to view their schedule</p>';
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/repeater/student/${studentId}/schedule`,
+          );
+          if (!response.ok) throw new Error('Student not found');
+
+          const data = await response.json();
+          currentStudent = data;
+
+          // Update sidebar
+          document.getElementById('studentInfo').style.display = 'block';
+          document.getElementById('studentName').textContent =
+            data.student_name;
+          document.getElementById('studentId').textContent = data.student_id;
+          document.getElementById('studentBatch').textContent =
+            data.primary_batch;
+
+          const repeaterStatus = document.getElementById('repeaterStatus');
+          if (data.is_repeater) {
+            repeaterStatus.innerHTML =
+              '<strong>Status:</strong> <span class="tag">REPEATER</span>';
+          } else {
+            repeaterStatus.innerHTML =
+              '<strong>Status:</strong> Regular Student';
+          }
+
+          // Render schedule
+          renderSchedule(data.enrolled_offerings);
+        } catch (error) {
+          console.error('Error:', error);
+          document.getElementById('scheduleContainer').innerHTML =
+            `<div class="message error">Error loading student: ${error.message}</div>`;
+        }
+      }
+
+      function renderSchedule(offerings) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        const slots = [
+          { num: 1, time: '8:30-10:00 AM' },
+          { num: 2, time: '10:00-11:30 AM' },
+          { num: 3, time: '11:30-1:00 PM' },
+          { num: 'break', time: '1:00-1:30 PM' },
+          { num: 4, time: '1:30-3:00 PM' },
+          { num: 5, time: '3:00-4:30 PM' },
+          { num: 6, time: '4:30-6:00 PM' },
+        ];
+
+        // Build grid data
+        const grid = {};
+        offerings.forEach((off) => {
+          off.meetings.forEach((m) => {
+            const key = `${m.day_index}-${m.slot_start}`;
+            grid[key] = {
+              course: off.course.course_name,
+              room: off.room.room_code,
+              teacher: off.teacher.name,
+              span: m.slot_end - m.slot_start + 1,
+              isLab: off.offering_type === 'LAB',
+            };
+            // Mark spanned slots
+            for (let s = m.slot_start + 1; s <= m.slot_end; s++) {
+              grid[`${m.day_index}-${s}`] = { spanned: true };
+            }
+          });
+        });
+
+        let html = '<div class="schedule-grid"><table class="schedule-table">';
+
+        // Header row
+        html += '<tr><th class="day-header"></th>';
+        slots.forEach((s) => {
+          if (s.num === 'break') {
+            html += `<th class="break-header">Break<br><small>${s.time}</small></th>`;
+          } else {
+            html += `<th>Slot ${s.num}<br><small>${s.time}</small></th>`;
+          }
+        });
+        html += '</tr>';
+
+        // Day rows
+        days.forEach((day, dayIdx) => {
+          html += `<tr><td class="day-cell">${day}</td>`;
+
+          slots.forEach((s) => {
+            if (s.num === 'break') {
+              if (dayIdx === 0) {
+                html += '<td class="break-cell" rowspan="5">Break</td>';
+              }
+              return;
+            }
+
+            const key = `${dayIdx}-${s.num}`;
+            const cell = grid[key];
+
+            if (cell && cell.spanned) {
+              return; // Skip cells covered by colspan
+            }
+
+            if (cell) {
+              const cellClass = cell.isLab
+                ? 'class-cell lab-cell'
+                : 'class-cell';
+              const colspan = cell.span > 1 ? ` colspan="${cell.span}"` : '';
+              html += `<td class="${cellClass}"${colspan}>
+                            <div class="class-content">
+                                <div class="course">${cell.course}</div>
+                                <div class="room">${cell.room}</div>
+                                <div class="teacher">${cell.teacher}</div>
+                            </div>
+                        </td>`;
+            } else {
+              html += '<td></td>';
+            }
+          });
+
+          html += '</tr>';
+        });
+
+        html += '</table></div>';
+        document.getElementById('scheduleContainer').innerHTML = html;
+      }
+
+      async function suggestAlternatives() {
+        const query = document.getElementById('courseQuery').value.trim();
+        if (!query) {
+          showMessage('Please enter a course name', 'error');
+          return;
+        }
+
+        if (!currentStudent) {
+          showMessage('Please select a student first', 'error');
+          return;
+        }
+
+        document.getElementById('alternativesList').innerHTML =
+          '<div class="loading"><span class="loading-spinner"></span> Finding alternatives...</div>';
+        document.getElementById('suggestionStats').style.display = 'none';
+
+        try {
+          const response = await fetch(`${API_BASE}/api/repeater/suggest`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              student_id: currentStudent.student_id,
+              course_query: query,
+            }),
+          });
+
+          if (!response.ok) throw new Error('Failed to get suggestions');
+
+          const data = await response.json();
+          currentCourse = data.matched_course_code;
+
+          // Show stats
+          document.getElementById('suggestionStats').style.display = 'flex';
+          document.getElementById('feasibleCount').textContent =
+            data.feasible_count;
+          document.getElementById('conflictingCount').textContent =
+            data.conflicting_count;
+          document.getElementById('processingTime').textContent =
+            data.processing_time_ms.toFixed(1);
+
+          showMessage(data.message, data.has_solution ? 'success' : 'info');
+
+          // Render alternatives
+          renderAlternatives(
+            data.feasible_alternatives,
+            data.conflicting_alternatives,
+          );
+
+          // Show multi-course section if no feasible options
+          if (!data.has_solution) {
+            document.getElementById('multiCourseSection').style.display =
+              'block';
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          showMessage(`Error: ${error.message}`, 'error');
+          document.getElementById('alternativesList').innerHTML = '';
+        }
+      }
+
+      function renderAlternatives(feasible, conflicting) {
+        let html = '';
+
+        // Feasible alternatives
+        if (feasible.length > 0) {
+          html +=
+            '<h4 style="margin-bottom: 10px; color: #22543d;">✅ Feasible Alternatives</h4>';
+          feasible.forEach((alt) => {
+            const off = alt.offering;
+            html += `
+                        <div class="alternative-item feasible">
+                            <div class="alternative-header">
+                                <span class="alternative-title">${off.batch_section}</span>
+                                <span class="status-badge feasible">Available</span>
+                            </div>
+                            <div class="alternative-details">
+                                <p><strong>Course:</strong> ${off.course.course_name}</p>
+                                <p><strong>Teacher:</strong> ${off.teacher.name} (${off.teacher.department})</p>
+                                <p><strong>Room:</strong> ${off.room.room_code}</p>
+                                <p><strong>Score:</strong> ${alt.score.toFixed(1)} (lower is better)</p>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" onclick="enrollOffering('${off.offering_id}')">
+                                    ✓ Enroll
+                                </button>
+                            </div>
+                        </div>
+                    `;
+          });
+        }
+
+        // Conflicting alternatives
+        if (conflicting.length > 0) {
+          html +=
+            '<h4 style="margin: 20px 0 10px; color: #742a2a;">❌ Conflicting Alternatives</h4>';
+          conflicting.forEach((alt) => {
+            const off = alt.offering;
+            html += `
+                        <div class="alternative-item conflicting">
+                            <div class="alternative-header">
+                                <span class="alternative-title">${off.batch_section}</span>
+                                <span class="status-badge conflicting">Clash</span>
+                            </div>
+                            <div class="alternative-details">
+                                <p><strong>Course:</strong> ${off.course.course_name}</p>
+                                <p><strong>Teacher:</strong> ${off.teacher.name}</p>
+                                <p><strong>Room:</strong> ${off.room.room_code}</p>
+                            </div>
+                            <div class="clash-reason">
+                                <strong>Conflict:</strong> ${alt.reason || 'Schedule conflict'}
+                            </div>
+                        </div>
+                    `;
+          });
+        }
+
+        if (!feasible.length && !conflicting.length) {
+          html = '<p class="loading">No offerings found for this course</p>';
+        }
+
+        document.getElementById('alternativesList').innerHTML = html;
+      }
+
+      async function enrollOffering(offeringId) {
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/repeater/student/${currentStudent.student_id}/enroll?offering_id=${offeringId}`,
+            {
+              method: 'POST',
+            },
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to enroll');
+          }
+
+          showMessage('Successfully enrolled in offering!', 'success');
+          loadStudent(); // Refresh schedule
+        } catch (error) {
+          showMessage(`Error: ${error.message}`, 'error');
+        }
+      }
+
+      function addCurrentCourse() {
+        if (!currentCourse) {
+          showMessage('Please search for a course first', 'error');
+          return;
+        }
+
+        if (!multiCourses.includes(currentCourse)) {
+          multiCourses.push(currentCourse);
+          renderCourseTags();
+        }
+      }
+
+      function removeCourse(code) {
+        multiCourses = multiCourses.filter((c) => c !== code);
+        renderCourseTags();
+      }
+
+      function renderCourseTags() {
+        const container = document.getElementById('courseTags');
+        container.innerHTML = multiCourses
+          .map(
+            (code) => `
+                <span class="course-tag">
+                    ${code}
+                    <span class="remove" onclick="removeCourse('${code}')">&times;</span>
+                </span>
+            `,
+          )
+          .join('');
+      }
+
+      async function solveMultiCourse() {
+        if (multiCourses.length === 0) {
+          showMessage('Please add at least one course to solve', 'error');
+          return;
+        }
+
+        document.getElementById('solverResult').innerHTML =
+          '<div class="loading"><span class="loading-spinner"></span> Running CP-SAT solver...</div>';
+        document.getElementById('suggestionBadge').textContent = 'Layer 2';
+
+        try {
+          const response = await fetch(`${API_BASE}/api/repeater/solve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              student_id: currentStudent.student_id,
+              course_queries: multiCourses,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.status === 'optimal' || data.status === 'feasible') {
+            let html = `
+                        <div class="solver-result">
+                            <h4>✅ Solution Found (${data.status})</h4>
+                            <p><strong>Solving Time:</strong> ${data.solving_time_ms.toFixed(1)} ms</p>
+                            <p><strong>Total Gaps:</strong> ${data.total_gaps}</p>
+                            <p><strong>Late Slots:</strong> ${data.total_late_slots}</p>
+                            <hr style="margin: 10px 0;">
+                            <pre style="font-size: 12px;">${data.explanation}</pre>
+                        </div>
+                    `;
+            document.getElementById('solverResult').innerHTML = html;
+          } else {
+            document.getElementById('solverResult').innerHTML = `
+                        <div class="message error">
+                            <strong>Status:</strong> ${data.status}<br>
+                            ${data.explanation}<br>
+                            ${data.conflicts.length > 0 ? '<br><strong>Conflicts:</strong><br>' + data.conflicts.join('<br>') : ''}
+                        </div>
+                    `;
+          }
+        } catch (error) {
+          document.getElementById('solverResult').innerHTML = `
+                    <div class="message error">Error: ${error.message}</div>
+                `;
+        }
+      }
+
+      function showMessage(text, type) {
+        const container = document.getElementById('suggestionMessage');
+        container.innerHTML = `<div class="message ${type}">${text}</div>`;
+        setTimeout(() => (container.innerHTML = ''), 5000);
+      }
+
+      function exportPDF() {
+        if (!currentStudent) {
+          alert('Please select a student first');
+          return;
+        }
+        window.open(
+          `/api/timetable/render-html/${currentStudent.primary_batch}`,
+          '_blank',
+        );
+      }
+    </script>
+  </body>
+</html>

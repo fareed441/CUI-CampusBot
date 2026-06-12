@@ -1,0 +1,996 @@
+================================================================================
+        CUI CAMPUS BOT - DETAILED PROJECT DOCUMENTATION
+================================================================================
+Project Name: CUI Campus Chatbot with RAG (Retrieval-Augmented Generation)
+Version: 1.0
+Date: December 17, 2025
+Institution: COMSATS University Islamabad (CUI) Vehari Campus
+
+================================================================================
+                            TABLE OF CONTENTS
+================================================================================
+1. Project Overview
+2. System Architecture
+3. Core Modules and Their Functions
+4. Libraries and Dependencies
+5. Data Flow and Processing Pipeline
+6. API Integration Details
+7. Frontend Components
+8. Configuration and Environment
+9. File Structure
+
+================================================================================
+                        1. PROJECT OVERVIEW
+================================================================================
+
+The CUI Campus Bot is an intelligent question-answering system designed to 
+provide accurate information about COMSATS University Islamabad (CUI) Vehari 
+Campus. It uses Retrieval-Augmented Generation (RAG) architecture to combine:
+
+- Document retrieval from a knowledge base (PDFs, DOCX, JSON files)
+- AI-powered response generation using Perplexity LLM
+- Local vector embeddings (BAAI BGE model) for semantic search
+- Web interface built with Flask and modern HTML/CSS/JavaScript
+
+KEY FEATURES:
+- Free, unlimited local embeddings (no API quotas)
+- Supports PDF, DOCX, and JSON document formats
+- Real-time chat interface with conversation history
+- Accurate, context-aware responses
+- Restricts queries to CUI-related topics only
+- Multi-page web interface (chat, timetable, feedback, login)
+
+================================================================================
+                        2. SYSTEM ARCHITECTURE
+================================================================================
+
+ARCHITECTURE PATTERN: RAG (Retrieval-Augmented Generation)
+
+COMPONENTS:
+┌──────────────────────────────────────────────────────────────────────┐
+│                         USER INTERFACE                                │
+│  (Flask Web App - HTML/CSS/JS with Inter Font)                       │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │
+                             ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                      FLASK API LAYER (app.py)                         │
+│  - Route handling (/api/chat, /api/status, etc.)                     │
+│  - Session management and error handling                              │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │
+                             ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                   RAG PIPELINE (rag_pipeline_free.py)                 │
+│  - Query processing and orchestration                                 │
+│  - Context retrieval coordination                                     │
+│  - Response generation management                                     │
+└─────────────┬────────────────────────────────────┬───────────────────┘
+              │                                    │
+              ▼                                    ▼
+┌─────────────────────────────┐    ┌──────────────────────────────────┐
+│  VECTOR STORE                │    │  LLM PROVIDER                     │
+│  (vector_store_free.py)      │    │  (perplexity_llm.py)              │
+│  - ChromaDB vector database  │    │  - Perplexity API integration     │
+│  - BAAI BGE embeddings       │    │  - Response generation            │
+│  - Similarity search         │    │  - Context injection              │
+└──────────────┬──────────────┘    └──────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                 DATA LOADER (load_cui_data.py)                        │
+│  - PDF parsing (PyPDF)                                                │
+│  - DOCX parsing (python-docx)                                         │
+│  - JSON parsing and text chunking                                     │
+└──────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. CORE MODULES AND THEIR FUNCTIONS
+================================================================================
+
+MODULE 1: app.py (Flask Web Application)
+----------------------------------------
+PURPOSE: Main web server and API handler
+
+KEY FUNCTIONS:
+- initialize_rag(): Initializes the RAG pipeline with vector store and LLM
+- home(): Serves the landing page (index.html)
+- chat_page(): Serves the chat interface (chat.html)
+- timetable_page(): Serves timetable lookup page
+- feedback_page(): Serves feedback form page
+- login_page(): Serves admin login page
+- chat() [POST /api/chat]: Handles chat queries, retrieves context, generates responses
+- clear() [POST /api/clear]: Clears conversation history
+- status() [GET /api/status]: Returns system status (online/offline)
+- suggestions() [GET /api/suggestions]: Returns sample questions
+- reload_pipeline() [POST /api/reload]: Reloads .env and RAG pipeline
+- _strip_markdown(): Removes Markdown formatting from responses
+
+DEPENDENCIES:
+- Flask: Web framework
+- flask_cors: Cross-Origin Resource Sharing support
+- python-dotenv: Environment variable management
+- rag_pipeline_free: RAG orchestration
+- config: Configuration parameters
+
+
+MODULE 2: config.py (Configuration Management)
+----------------------------------------------
+PURPOSE: Central configuration for all system parameters
+
+KEY CONFIGURATIONS:
+- PPLX_API_KEY: Perplexity API authentication key
+- PPLX_MODEL: AI model selection (sonar, sonar-pro, etc.)
+- PPLX_TEMPERATURE: Response creativity (0.3 = focused, deterministic)
+- DATA_DIRECTORY: Path to knowledge base documents
+- CHUNK_SIZE: Maximum characters per document chunk (1000)
+- CHUNK_OVERLAP: Overlap between chunks for context (200)
+- RETRIEVAL_TOP_K: Number of documents to retrieve (5)
+- SYSTEM_PROMPT: Instructions for AI behavior and restrictions
+- CHROMA_PERSIST_DIRECTORY: Vector database storage location
+- SEARCH_TYPE: Similarity search algorithm
+
+SYSTEM PROMPT DESIGN:
+The SYSTEM_PROMPT restricts the bot to CUI-related topics only and ensures:
+1. Accurate answers using only provided context
+2. Rejection of non-CUI queries (programming, general knowledge)
+3. Plain text formatting (no Markdown)
+4. Concise, direct responses
+
+
+MODULE 3: load_cui_data.py (Data Loader)
+-----------------------------------------
+PURPOSE: Load and process documents from various formats
+
+KEY CLASSES:
+- TextChunker: Splits text into manageable chunks
+  * chunk_by_sentences(): Sentence-based splitting
+  * chunk_by_paragraphs(): Paragraph-based splitting
+  * chunk_qna_pairs(): Q&A format optimization
+  
+- CUIDataLoader: Main document loading orchestrator
+  * load_json_qna(): Loads JSON Q&A files
+  * load_pdf_timetable(): Loads PDF documents (timetables, policies)
+  * load_docx_file(): Loads DOCX documents (admissions, scholarships)
+  * load_all_data(): Scans directory and loads all supported files
+  * get_chunking_stats(): Analyzes chunk size distribution
+
+SUPPORTED FORMATS:
+1. JSON: Question-answer pairs with metadata
+2. PDF: PyPDF loader for timetables, policies, general info
+3. DOCX: python-docx for Word documents (admissions, scholarships)
+
+TEXT CHUNKING STRATEGY:
+- RecursiveCharacterTextSplitter: Smart splitting at natural boundaries
+- Separators: ["\n\n", "\n", ". ", " ", ""]
+- Preserves context with overlap between chunks
+- Maintains metadata (source, category, type)
+
+
+MODULE 4: vector_store_free.py (Vector Database Manager)
+---------------------------------------------------------
+PURPOSE: Store and retrieve document embeddings using free local models
+
+KEY FEATURES:
+- BAAI BGE embeddings (bge-small-en-v1.5)
+- ChromaDB persistent vector database
+- No API keys required, unlimited usage
+- CPU-based inference (no GPU needed)
+
+KEY METHODS:
+- __init__(): Initialize embeddings model and ChromaDB client
+- add_documents(): Batch insert documents with embeddings
+- similarity_search(): Find relevant documents by semantic similarity
+- similarity_search_with_score(): Return documents with relevance scores
+- get_retriever(): Create LangChain retriever interface
+- delete_collection(): Reset vector database
+- get_collection_stats(): Database statistics and health check
+
+EMBEDDING MODEL DETAILS:
+- Model: BAAI/bge-small-en-v1.5
+- Dimensions: 384
+- Max tokens: 512
+- Normalized embeddings: Yes
+- Device: CPU
+- Size: ~130MB (downloaded on first run)
+
+CHROMADB CONFIGURATION:
+- Persistent storage: chroma_db/ directory
+- Collection name: cui_campus_bot
+- Distance metric: Cosine similarity
+
+
+MODULE 5: perplexity_llm.py (LLM Integration)
+----------------------------------------------
+PURPOSE: Interface with Perplexity AI for response generation
+
+KEY METHODS:
+- __init__(): Initialize API client with key and model settings
+- _call_api(): HTTP POST to Perplexity API with retry logic
+- generate_response(): Simple prompt-response generation
+- generate_response_with_context(): RAG-style generation with retrieved context
+- generate_chat_response(): Conversational responses with history
+- _extract_content(): Parse API response and extract text
+
+PERPLEXITY API DETAILS:
+- Endpoint: https://api.perplexity.ai/chat/completions
+- Authentication: Bearer token
+- Models available:
+  * sonar (default): Fast, balanced
+  * sonar-pro: Higher quality
+  * sonar-reasoning: Step-by-step reasoning
+  * sonar-deep-research: In-depth analysis
+- Temperature: 0.3 (low = more focused/deterministic)
+- Max retries: 5 with exponential backoff
+- Timeout: 30 seconds
+
+CONTEXT INJECTION:
+The context from retrieved documents is formatted as:
+"Based on the following information from CUI Vehari Campus database:
+[Document 1 content]
+---
+[Document 2 content]
+---
+...
+User Question: [query]
+Provide an accurate answer using the information above."
+
+
+MODULE 6: rag_pipeline_free.py (RAG Orchestrator)
+--------------------------------------------------
+PURPOSE: Coordinate the entire RAG pipeline from query to response
+
+KEY METHODS:
+- __init__(): Initialize data loader, vector store, and LLM
+- _initialize_components(): Set up all pipeline components
+- index_data(): Load and embed documents into vector store
+- retrieve_context(): Query vector store for relevant documents
+- generate_response(): Send context and query to LLM
+- query(): Complete RAG workflow (retrieve + generate)
+- get_pipeline_status(): System health and statistics
+
+WORKFLOW:
+1. User submits query
+2. Query is embedded using BAAI BGE
+3. Vector store returns top-K similar documents
+4. Documents + query sent to Perplexity LLM
+5. LLM generates response using context
+6. Response is cleaned and returned to user
+
+PARAMETERS:
+- top_k: 5 documents retrieved per query
+- chunk_size: 800 characters per document chunk
+- chunk_overlap: 150 characters overlap
+- search_type: "similarity" (cosine distance)
+
+
+MODULE 7: initialize_db.py (Database Setup)
+--------------------------------------------
+PURPOSE: One-time setup script to index all documents
+
+PROCESS:
+1. Load all documents from cui_chatbot_data/ folder
+2. Split documents into chunks
+3. Generate embeddings using BAAI BGE
+4. Store embeddings in ChromaDB
+5. Verify with test retrieval
+
+USAGE:
+Run once before starting the chatbot:
+$ python initialize_db.py
+
+This creates the chroma_db/ directory with the indexed vector database.
+
+
+MODULE 8: Frontend Templates (templates/ folder)
+-------------------------------------------------
+PURPOSE: User interface HTML pages
+
+FILES:
+1. index.html: Landing page with hero section, modules, navigation
+2. chat.html: Live chat interface with message display and input
+3. timetable.html: Class timetable lookup by code
+4. feedback.html: User feedback form
+5. login.html: Admin login with file upload capability
+
+DESIGN:
+- Font: Inter (highly readable, modern)
+- Color scheme: Dark theme with electric blue (#00FFFF) accents
+- Framework: Tailwind CSS for utility classes
+- Background: CUI campus images (c.jpg, b.jpg)
+- Logo: comsats-logo.svg
+
+CHAT INTERFACE FEATURES:
+- Real-time message display
+- Typing indicator during API calls
+- Auto-scroll to latest message
+- Error handling and retry logic
+- Send button with keyboard shortcut (Enter)
+
+
+MODULE 9: Static Assets (static/ folder)
+-----------------------------------------
+PURPOSE: Images and client-side scripts
+
+STRUCTURE:
+static/
+├── images/
+│   ├── b.jpg (campus background image)
+│   ├── c.jpg (hero background image)
+│   └── comsats-logo.svg (university logo)
+└── script.js (frontend JavaScript - if needed)
+
+================================================================================
+                    4. LIBRARIES AND DEPENDENCIES
+================================================================================
+
+CATEGORY 1: LangChain Framework
+--------------------------------
+langchain (Core framework)
+- PURPOSE: RAG pipeline orchestration and document processing
+- VERSION: Latest stable
+- USAGE: Base classes for chains, prompts, and agents
+
+langchain-community (Community integrations)
+- PURPOSE: Vector store and loader integrations
+- COMPONENTS USED:
+  * PyPDFLoader: PDF document parsing
+  * Chroma: Vector database integration
+  * HuggingFaceEmbeddings: Embedding model wrapper
+
+langchain-core (Core abstractions)
+- PURPOSE: Base classes and protocols
+- COMPONENTS USED:
+  * Document: Document data structure
+  * Embeddings: Embedding interface protocol
+
+langchain-text-splitters (Text splitting utilities)
+- PURPOSE: Smart text chunking strategies
+- SPLITTERS USED:
+  * RecursiveCharacterTextSplitter: Hierarchical splitting
+  * CharacterTextSplitter: Simple paragraph-based splitting
+  * TokenTextSplitter: Token-based chunking
+
+
+CATEGORY 2: Vector Database and Embeddings
+-------------------------------------------
+chromadb
+- PURPOSE: Open-source vector database
+- FEATURES:
+  * Persistent storage on disk
+  * Fast similarity search
+  * Collection management
+  * Metadata filtering
+- STORAGE: chroma_db/ directory
+
+sentence-transformers
+- PURPOSE: Sentence embedding models
+- MODEL USED: BAAI/bge-small-en-v1.5
+- FEATURES:
+  * 384-dimensional embeddings
+  * Normalized vectors
+  * CPU-optimized inference
+
+transformers (HuggingFace)
+- PURPOSE: Pre-trained model loading
+- USAGE: Backend for sentence-transformers
+- FEATURES:
+  * Model downloading and caching
+  * Tokenization
+  * Inference engine
+
+torch (PyTorch)
+- PURPOSE: Deep learning framework
+- USAGE: Tensor operations for embeddings
+- VERSION: CPU-only (no CUDA required)
+
+faiss-cpu
+- PURPOSE: Alternative vector search library (not actively used)
+- FEATURES: Fast similarity search and clustering
+
+
+CATEGORY 3: Document Processing
+--------------------------------
+pypdf
+- PURPOSE: PDF parsing and text extraction
+- USAGE: Load timetables, policies, and campus info PDFs
+- FEATURES:
+  * Text extraction
+  * Page-by-page processing
+  * Metadata extraction
+
+pypdf2
+- PURPOSE: Alternative PDF library (fallback)
+- FEATURES: Similar to pypdf with different API
+
+python-docx
+- PURPOSE: Microsoft Word document parsing
+- USAGE: Load admission info, scholarship details, general info
+- FEATURES:
+  * Text extraction from paragraphs
+  * Table reading
+  * Document structure preservation
+
+unstructured
+- PURPOSE: General-purpose document parsing
+- FEATURES:
+  * Auto-detect document types
+  * Extract text, tables, images
+  * Handle complex layouts
+
+pdfplumber
+- PURPOSE: Enhanced PDF parsing
+- FEATURES:
+  * Table extraction
+  * Layout analysis
+  * Precise text positioning
+
+
+CATEGORY 4: Web Framework
+--------------------------
+flask
+- PURPOSE: Web application framework
+- USAGE: API server, route handling, template rendering
+- FEATURES:
+  * Routing (@app.route)
+  * Request/response handling
+  * Session management
+  * Template engine (Jinja2)
+  * JSON API support
+
+flask-cors
+- PURPOSE: Cross-Origin Resource Sharing
+- USAGE: Allow frontend to call API from different origins
+- FEATURES:
+  * Automatic CORS headers
+  * Pre-flight request handling
+  * Flexible origin configuration
+
+
+CATEGORY 5: HTTP and Networking
+--------------------------------
+requests
+- PURPOSE: HTTP client library
+- USAGE: Call Perplexity API, handle retries
+- FEATURES:
+  * Simple API for GET/POST requests
+  * Automatic JSON encoding/decoding
+  * Session management
+  * Timeout handling
+
+aiohttp
+- PURPOSE: Async HTTP client/server
+- USAGE: Potential future async operations
+- FEATURES:
+  * Asynchronous I/O
+  * WebSocket support
+  * Connection pooling
+
+
+CATEGORY 6: Data Processing
+----------------------------
+numpy
+- PURPOSE: Numerical computing
+- USAGE: Vector operations, array manipulation
+- FEATURES:
+  * Efficient array operations
+  * Linear algebra
+  * Broadcasting
+
+pandas
+- PURPOSE: Data manipulation (future use)
+- POTENTIAL USAGE: 
+  * CSV processing
+  * Data analysis
+  * DataFrame operations
+
+tiktoken
+- PURPOSE: Token counting for OpenAI-style models
+- USAGE: Estimate token usage, prevent context overflow
+- FEATURES:
+  * Fast tokenization
+  * Multiple encoding types
+
+
+CATEGORY 7: Utilities
+----------------------
+python-dotenv
+- PURPOSE: Environment variable management
+- USAGE: Load .env file with API keys
+- FEATURES:
+  * Automatic .env file parsing
+  * Override existing environment variables
+  * Secure credential storage
+
+pydantic
+- PURPOSE: Data validation using Python type hints
+- USAGE: LangChain internal data models
+- FEATURES:
+  * Type checking
+  * Data validation
+  * JSON schema generation
+
+python-magic-bin
+- PURPOSE: File type detection
+- USAGE: Identify document types automatically
+- FEATURES:
+  * MIME type detection
+  * Magic number analysis
+
+
+CATEGORY 8: Development Tools
+------------------------------
+jupyter
+- PURPOSE: Interactive development environment
+- USAGE: Prototyping, testing, exploration
+- FEATURES:
+  * Notebook interface
+  * Live code execution
+  * Data visualization
+
+ipython
+- PURPOSE: Enhanced Python shell
+- FEATURES:
+  * Tab completion
+  * Syntax highlighting
+  * Magic commands
+
+notebook
+- PURPOSE: Jupyter notebook server
+- FEATURES:
+  * Web-based interface
+  * Kernel management
+  * Extension support
+
+
+CATEGORY 9: Additional Libraries
+---------------------------------
+opencv-python
+- PURPOSE: Computer vision (optional)
+- POTENTIAL USAGE:
+  * Image processing
+  * Document scanning
+  * OCR preprocessing
+
+================================================================================
+                    5. DATA FLOW AND PROCESSING PIPELINE
+================================================================================
+
+PHASE 1: DOCUMENT INGESTION AND INDEXING
+-----------------------------------------
+Step 1: Document Loading
+┌─────────────────────────────────────────────────────────────┐
+│ Source: cui_chatbot_data/ folder                            │
+│ - admission_related_information.docx                         │
+│ - comsats_scholarships_information.docx                      │
+│ - General Information.docx                                   │
+│ - comsats_teachers_info.pdf                                  │
+│ - Comsats_Vehari_Campus_Paragraph_Format.pdf                │
+│ - Timetable CUI Vehari (Revised-V5) Class Wise-Fall-2025.pdf│
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 2: Text Extraction and Chunking
+┌─────────────────────────────────────────────────────────────┐
+│ - Extract text from documents                                │
+│ - Split into 1000-character chunks with 200-char overlap    │
+│ - Preserve metadata (source, category, page)                │
+│ - Total: 182 document chunks                                 │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 3: Embedding Generation
+┌─────────────────────────────────────────────────────────────┐
+│ Model: BAAI/bge-small-en-v1.5                               │
+│ - Convert text chunks to 384-dim vectors                    │
+│ - Normalize embeddings                                      │
+│ - Process in batches of 50                                  │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 4: Vector Storage
+┌─────────────────────────────────────────────────────────────┐
+│ ChromaDB Collection: cui_campus_bot                         │
+│ - Store embeddings with metadata                            │
+│ - Create search index                                       │
+│ - Persist to disk: chroma_db/                              │
+└─────────────────────────────────────────────────────────────┘
+
+
+PHASE 2: QUERY PROCESSING AND RESPONSE GENERATION
+--------------------------------------------------
+User Query: "What scholarships are available at CUI?"
+                         │
+                         ▼
+Step 1: Query Embedding
+┌─────────────────────────────────────────────────────────────┐
+│ - Convert query to 384-dim vector using BAAI BGE           │
+│ - Same model as document embeddings                        │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 2: Similarity Search
+┌─────────────────────────────────────────────────────────────┐
+│ ChromaDB Query:                                             │
+│ - Calculate cosine similarity with all document vectors    │
+│ - Return top-5 most similar documents                      │
+│ - Include metadata and original text                       │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Retrieved Context (Example):
+┌─────────────────────────────────────────────────────────────┐
+│ Document 1: "Q: Are there any scholarships available at    │
+│ CUI? A: Yes, scholarships and financial aid are available  │
+│ based on need or specific criteria set by donors..."       │
+│                                                             │
+│ Document 2: "Merit-based scholarships are awarded to top   │
+│ performers in admissions. Need-based financial aid..."     │
+│                                                             │
+│ Document 3: "Details about scholarship application..."     │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 3: Context Formatting
+┌─────────────────────────────────────────────────────────────┐
+│ Format for LLM:                                             │
+│ "Based on the following information from CUI Vehari Campus  │
+│ database:                                                   │
+│                                                             │
+│ [Document 1 content]                                        │
+│ ---                                                         │
+│ [Document 2 content]                                        │
+│ ---                                                         │
+│ [Document 3 content]                                        │
+│                                                             │
+│ User Question: What scholarships are available at CUI?     │
+│ Provide an accurate answer using the information above."   │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 4: LLM Generation
+┌─────────────────────────────────────────────────────────────┐
+│ Perplexity API Call:                                        │
+│ - Model: sonar                                              │
+│ - Temperature: 0.3                                          │
+│ - System Prompt: CUI Campus Bot restrictions               │
+│ - User Message: Context + Question                         │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Step 5: Response Processing
+┌─────────────────────────────────────────────────────────────┐
+│ - Extract answer text from API response                    │
+│ - Remove Markdown formatting (**, __, #, etc.)            │
+│ - Remove citations [1], [2]                                │
+│ - Return clean plain text                                  │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+Final Response to User:
+"CUI Vehari Campus offers multiple scholarship opportunities 
+including merit-based scholarships for top performers and 
+need-based financial aid for students with demonstrated financial 
+need. Applications are processed during the admission period."
+
+
+PHASE 3: CONVERSATION MANAGEMENT
+---------------------------------
+Session Storage:
+┌─────────────────────────────────────────────────────────────┐
+│ Flask Session (server-side):                               │
+│ {                                                           │
+│   "history": [                                              │
+│     {                                                       │
+│       "question": "What scholarships...",                   │
+│       "answer": "CUI offers...",                           │
+│       "timestamp": "2025-12-17T10:30:00"                   │
+│     },                                                      │
+│     ...                                                     │
+│   ]                                                         │
+│ }                                                           │
+│ - Limit: Last 10 exchanges                                 │
+│ - Cleared on /api/clear request                            │
+└─────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    6. API INTEGRATION DETAILS
+================================================================================
+
+PERPLEXITY AI API
+-----------------
+Base URL: https://api.perplexity.ai/chat/completions
+
+AUTHENTICATION:
+- Method: Bearer Token
+- Header: Authorization: Bearer {PPLX_API_KEY}
+- Key source: .env file or environment variable
+
+REQUEST FORMAT:
+{
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the official CUI Campus Bot..."
+    },
+    {
+      "role": "user",
+      "content": "Based on the following information..."
+    }
+  ],
+  "temperature": 0.3
+}
+
+RESPONSE FORMAT:
+{
+  "id": "chat-xxxxx",
+  "object": "chat.completion",
+  "created": 1702812345,
+  "model": "sonar",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "CUI Vehari Campus offers..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 250,
+    "completion_tokens": 150,
+    "total_tokens": 400
+  }
+}
+
+ERROR HANDLING:
+- 429 (Rate Limit): Exponential backoff retry
+- 500-504 (Server Error): Retry up to 5 times
+- Timeout: 30-second limit per request
+- Network errors: Automatic retry with backoff
+
+RATE LIMITING:
+- Max: 60 requests per minute (configured in config.py)
+- Delay: 0.5 seconds between calls
+- Handled automatically by retry logic
+
+================================================================================
+                    7. FRONTEND COMPONENTS
+================================================================================
+
+CHAT INTERFACE (chat.html)
+---------------------------
+FEATURES:
+1. Message Display Area
+   - User messages: Right-aligned, cyan-bordered
+   - Bot messages: Left-aligned, gray background
+   - Typing indicator: Animated "Thinking..." message
+   - Auto-scroll: Always show latest message
+
+2. Input Area
+   - Text input field with placeholder
+   - Send button with icon
+   - Enter key shortcut
+   - Disabled during API call
+
+3. Status Bar
+   - Green indicator: System online
+   - Session status: "Active | Session Established"
+
+JAVASCRIPT FUNCTIONS:
+- sendMessage(event): Handle form submission
+- appendMsg(text, type, isTyping): Add message to display
+- removeTypingIndicator(): Remove "Thinking..." message
+- API fetch to /api/chat with error handling
+
+CSS STYLING:
+- Dark theme: #050d14 background
+- Electric blue accents: #00FFFF
+- Inter font: Readable, modern
+- Responsive design: Mobile-friendly
+
+
+LANDING PAGE (index.html)
+--------------------------
+SECTIONS:
+1. Hero Section
+   - Large CUI logo
+   - Main heading: "CUI Campus Bot"
+   - Tagline: "Your AI-Powered Campus Assistant"
+   - CTA button: "Start Chat"
+
+2. Modules Section
+   - Chat Module: Interactive Q&A
+   - Timetable Module: Class schedules
+   - Feedback Module: User feedback form
+   - Login Module: Admin access
+
+3. Sidebar Navigation
+   - Quick links to all pages
+   - Smooth animations
+   - Hover effects
+
+ANIMATIONS:
+- fadeInSlideUp: Elements fade in while sliding up
+- pulseGlow: Pulsing glow effect on active elements
+- Staggered delays: 100ms, 300ms, 500ms, 700ms
+
+
+TIMETABLE PAGE (timetable.html)
+--------------------------------
+FEATURES:
+- Class code input field (e.g., FA22-BCS-7A)
+- Search button to display timetable
+- Demo data with sample timetables
+- Table display with days and time slots
+- Responsive table with sticky header
+
+DATA FORMAT:
+{
+  'FA22-BCS-7A': {
+    timeslots: ['08:30-10:00', '10:00-11:30', ...],
+    days: {
+      Monday: ['Data Structures (LH-2)', 'Discrete Math (LH-5)', ...],
+      Tuesday: ['OS (LH-3)', '', 'DBMS Lab (Lab-1)', ''],
+      ...
+    }
+  }
+}
+
+
+FEEDBACK PAGE (feedback.html)
+------------------------------
+FORM FIELDS:
+- Name (text input)
+- Email (email input, validated)
+- Feedback (textarea, min 3 lines)
+- Submit button
+
+VALIDATION:
+- HTML5 required attributes
+- Email format validation
+- Non-empty feedback text
+
+SUCCESS MESSAGE:
+"Thanks! Your feedback has been received."
+(Auto-hide after 3.5 seconds)
+
+
+LOGIN PAGE (login.html)
+------------------------
+FEATURES:
+1. Login Form
+   - Email input
+   - Password input (masked)
+   - Login button
+   - Demo mode (client-side only)
+
+2. Upload Area (shown after login)
+   - File upload zone
+   - Drag-and-drop support
+   - File type filter (.pdf, .doc, .docx, .csv, .txt, .json)
+   - File name display
+
+3. Session Management
+   - LocalStorage: 'cui_isLoggedIn' flag
+   - Logout button
+   - UI state synchronization
+
+================================================================================
+                    8. CONFIGURATION AND ENVIRONMENT
+================================================================================
+
+ENVIRONMENT FILE (.env)
+-----------------------
+Required variables:
+PPLX_API_KEY=pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Optional variables:
+PPLX_MODEL=sonar
+PPLX_TEMPERATURE=0.3
+LLM_PROVIDER=perplexity
+
+CONFIGURATION PARAMETERS (config.py)
+-------------------------------------
+API Configuration:
+- PPLX_API_URL: Perplexity API endpoint
+- PPLX_API_KEY: Authentication key (from .env)
+- PPLX_MODEL: Model selection (sonar, sonar-pro, etc.)
+- PPLX_TEMPERATURE: 0.3 (focused, deterministic)
+- PPLX_MAX_RETRIES: 5 attempts
+- PPLX_TIMEOUT: 30 seconds
+
+Data Configuration:
+- DATA_DIRECTORY: "cui_chatbot_data"
+- CHUNK_SIZE: 1000 characters
+- CHUNK_OVERLAP: 200 characters
+
+Vector Store Configuration:
+- VECTOR_STORE_TYPE: "chroma"
+- CHROMA_PERSIST_DIRECTORY: "chroma_db"
+- CHROMA_COLLECTION_NAME: "cui_campus_bot"
+
+RAG Configuration:
+- RETRIEVAL_TOP_K: 5 documents
+- SEARCH_TYPE: "similarity"
+- SIMILARITY_THRESHOLD: 0.7
+
+System Configuration:
+- MAX_CONVERSATION_HISTORY: 10 exchanges
+- MAX_REQUESTS_PER_MINUTE: 60
+- API_CALL_DELAY: 0.5 seconds
+- LOG_LEVEL: "INFO"
+
+================================================================================
+                    9. FILE STRUCTURE
+================================================================================
+
+CUI Campus bot/
+│
+├── app.py                      # Flask web application (main entry point)
+├── config.py                   # Configuration parameters
+├── initialize_db.py            # Database setup script
+├── requirements.txt            # Python dependencies
+├── .env                        # Environment variables (API keys)
+├── .gitignore                  # Git ignore patterns
+├── README.md                   # Project overview
+│
+├── Core Modules/
+│   ├── load_cui_data.py        # Document loading and chunking
+│   ├── vector_store_free.py    # Vector database with free embeddings
+│   ├── rag_pipeline_free.py    # RAG orchestration
+│   └── perplexity_llm.py       # Perplexity API integration
+│
+├── Legacy Modules/ (Not used in current version)
+│   ├── data_loader.py          # Old data loader
+│   ├── embeddings.py           # Old Google embeddings
+│   ├── gemini_llm.py           # Old Gemini LLM
+│   ├── free_llm.py             # Old LLM wrapper
+│   ├── rag_pipeline.py         # Old RAG pipeline
+│   └── vector_store.py         # Old vector store
+│
+├── templates/                  # Flask HTML templates
+│   ├── index.html              # Landing page
+│   ├── chat.html               # Chat interface
+│   ├── timetable.html          # Timetable lookup
+│   ├── feedback.html           # Feedback form
+│   └── login.html              # Admin login
+│
+├── static/                     # Static assets
+│   ├── images/
+│   │   ├── b.jpg               # Background image 1
+│   │   ├── c.jpg               # Background image 2
+│   │   └── comsats-logo.svg    # CUI logo
+│   └── script.js               # (Optional) Frontend JavaScript
+│
+├── cui_chatbot_data/           # Knowledge base documents
+│   ├── admission_related_information.docx
+│   ├── comsats_scholarships_information.docx
+│   ├── General Information.docx
+│   ├── comsats_teachers_info.pdf
+│   ├── Comsats_Vehari_Campus_Paragraph_Format.pdf
+│   └── Timetable CUI Vehari (Revised-V5) Class Wise-Fall-2025.pdf
+│
+├── chroma_db/                  # ChromaDB vector database (generated)
+│   ├── chroma.sqlite3          # SQLite database file
+│   └── [UUID folders]          # Vector data storage
+│
+├── venv/                       # Python virtual environment
+│
+├── __pycache__/                # Python cache files
+│
+└── frontend_project/           # Original frontend (reference only)
+
+================================================================================
+                        END OF DOCUMENTATION
+================================================================================
+
+For more information or support, contact:
+- Project: CUI Campus Bot
+- Institution: COMSATS University Islamabad, Vehari Campus
+- Documentation Generated: December 17, 2025
+
+This documentation covers all modules, libraries, and system architecture.
+For technical support, refer to individual module docstrings in the source code.

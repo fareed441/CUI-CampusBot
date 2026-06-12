@@ -1,0 +1,103 @@
+# =============================================
+# CUI CampusBot - Requirements
+# =============================================
+# Install with: pip install -r requirements.txt
+# 
+# Project: CUI Campus RAG Chatbot
+# Features: Flask, OAuth2+JWT, MongoDB Atlas, ChromaDB, BGE-M3 Multilingual
+# =============================================
+
+# =============================================
+# Flask Web Framework
+# =============================================
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-limiter>=3.5.0
+
+# =============================================
+# FastAPI (legacy / secondary API)
+# =============================================
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+jinja2>=3.1.0
+aiofiles>=23.0.0
+
+# =============================================
+# Authentication & Security (OAuth2 + JWT)
+# =============================================
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.0
+
+# =============================================
+# MongoDB Atlas
+# =============================================
+pymongo>=4.6.0
+certifi>=2024.0.0
+
+# =============================================
+# LangChain Core
+# =============================================
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-core>=0.1.0
+langchain-text-splitters>=0.0.1
+
+# =============================================
+# Vector Store & Embeddings
+# =============================================
+langchain-chroma>=0.1.0
+langchain-huggingface>=0.0.1
+chromadb>=0.4.0
+
+# =============================================
+# LLM Providers
+# =============================================
+langchain-perplexity>=0.1.0
+openai>=1.0.0
+groq>=0.4.0
+
+# =============================================
+# NLP & Embeddings (BGE-M3 Multilingual)
+# =============================================
+sentence-transformers>=2.2.0
+transformers>=4.36.0
+torch>=2.0.0
+
+# =============================================
+# Document Processing
+# =============================================
+pypdf>=4.0.0
+pdfplumber>=0.10.0
+python-docx>=1.0.0
+
+# =============================================
+# Utilities
+# =============================================
+numpy>=1.24.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# =============================================
+# HTTP Clients
+# =============================================
+requests>=2.31.0
+httpx>=0.26.0
+aiohttp>=3.9.0
+
+# =============================================
+# Optional: Development & Testing
+# =============================================
+# jupyter
+# ipython
+# notebook
+# pytest
+
+# =============================================
+# Optional: OCR & Image Processing
+# =============================================
+# pillow
+# pytesseract
+# opencv-python

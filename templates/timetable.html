@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUI CampusBot | Class Timetable & Notices</title>
+    <meta
+      name="description"
+      content="View your class timetable by entering your class code, and stay updated with university notifications and datesheets."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-deep: #050d14;
+        --bg-card: #0d1117;
+        --bg-surface: #1a2232;
+        --border: #1e3048;
+        --cyan: #00ffff;
+        --green: #00ff9d;
+        --purple: #a855f7;
+        --orange: #f97316;
+        --red: #ef4444;
+        --blue: #3b82f6;
+        --text-muted: #6b7280;
+        --text-dim: #9ca3af;
+        --text-main: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg-deep);
+        font-family: 'Inter', sans-serif;
+        color: var(--text-main);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── Back link ── */
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(13, 17, 23, 0.85);
+        border: 1.5px solid var(--cyan);
+        color: var(--cyan);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        backdrop-filter: blur(8px);
+        transition:
+          background 0.2s,
+          box-shadow 0.2s;
+      }
+      .back-link:hover {
+        background: rgba(0, 255, 255, 0.08);
+        box-shadow: 0 0 16px rgba(0, 255, 255, 0.25);
+      }
+
+      /* ── Layout ── */
+      .page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 5rem 1.25rem 4rem;
+      }
+
+      /* ── Page header ── */
+      .page-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      .page-header .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 1rem;
+      }
+      .page-header .logo img {
+        width: 52px;
+        height: 52px;
+      }
+      .page-header h1 {
+        font-size: clamp(1.7rem, 5vw, 2.6rem);
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .page-header .sub {
+        color: var(--text-dim);
+        font-size: 0.95rem;
+        margin-top: 0.4rem;
+      }
+
+      /* ── Cards ── */
+      .card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        transition: border-color 0.25s;
+      }
+      .card:hover {
+        border-color: rgba(0, 255, 255, 0.25);
+      }
+
+      .card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--cyan);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-sub {
+        color: var(--text-dim);
+        font-size: 0.88rem;
+        margin-bottom: 1.4rem;
+      }
+
+      /* ── Search inputs ── */
+      .input-row {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.6rem;
+      }
+      .input-code {
+        flex: 1 1 260px;
+        background: #0b1320;
+        border: 1.5px solid var(--border);
+        color: var(--text-main);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        font-size: 1rem;
+        font-family: 'Inter', monospace;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .input-code::placeholder {
+        color: var(--text-muted);
+      }
+      .input-code:focus {
+        border-color: var(--cyan);
+        box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.1);
+      }
+
+      .hint {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        margin-bottom: 1.2rem;
+      }
+
+      /* ── Buttons ── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.85rem 1.3rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .btn-green {
+        background: linear-gradient(135deg, #00c853, #00e676);
+        color: #050d14;
+        border-color: transparent;
+      }
+      .btn-green:hover {
+        box-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .btn-outline-cyan {
+        background: transparent;
+        color: var(--cyan);
+        border-color: var(--cyan);
+      }
+      .btn-outline-cyan:hover {
+        background: rgba(0, 255, 255, 0.08);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .btn-cyan {
+        background: linear-gradient(135deg, #0891b2, #06b6d4);
+        color: #fff;
+        border-color: transparent;
+      }
+      .btn-cyan:hover {
+        box-shadow: 0 0 18px rgba(6, 182, 212, 0.4);
+        transform: translateY(-1px);
+      }
+
+      /* ── Spinner ── */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+
+      /* ── Alerts ── */
+      .alert {
+        padding: 0.9rem 1.1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        color: #fca5a5;
+      }
+      .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: #fcd34d;
+      }
+      .alert-info {
+        background: rgba(0, 255, 255, 0.08);
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        color: var(--cyan);
+      }
+
+      /* ── PDF viewer ── */
+      .pdf-viewer-wrap {
+        display: none;
+        margin-top: 1.5rem;
+      }
+      .pdf-viewer-wrap .viewer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-bottom: 0.8rem;
+      }
+      .pdf-viewer-wrap .viewer-label {
+        color: var(--green);
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .pdf-frame {
+        width: 100%;
+        height: min(74vh, 820px);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        background: #0b1320;
+      }
+
+      /* ── Notification cards ── */
+      .section-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        color: #fff;
+      }
+
+      .notif-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-left-width: 4px;
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.9rem;
+        position: relative;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .notif-card:hover {
+        background: #1e2d42;
+      }
+
+      .notif-card.type-urgent {
+        border-left-color: var(--orange);
+      }
+      .notif-card.type-general {
+        border-left-color: var(--blue);
+      }
+      .notif-card.type-midterm,
+      .notif-card.type-finalterm,
+      .notif-card.type-datesheet {
+        border-left-color: var(--purple);
+      }
+      .notif-card.type-exam {
+        border-left-color: var(--red);
+      }
+
+      .notif-badge {
+        position: absolute;
+        top: 0.9rem;
+        right: 1.1rem;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .badge-urgent {
+        background: rgba(249, 115, 22, 0.2);
+        color: #fb923c;
+      }
+      .badge-general {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+      .badge-midterm {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+      }
+      .badge-finalterm {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+      }
+      .badge-datesheet {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+      }
+      .badge-exam {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+      }
+
+      .notif-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.35rem;
+        padding-right: 90px;
+      }
+      .notif-body {
+        color: var(--text-dim);
+        font-size: 0.88rem;
+        line-height: 1.55;
+      }
+      .notif-date {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        margin-top: 0.6rem;
+        text-align: right;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+      .empty-state .icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.6rem;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 600px) {
+        .input-row {
+          flex-direction: column;
+        }
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+        .card {
+          padding: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/" class="back-link">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+      Back
+    </a>
+
+    <div class="page">
+      <!-- Page header -->
+      <div class="page-header">
+        <div class="logo">
+          <img src="/static/images/comsats-logo.svg" alt="CUI Logo" />
+          <h1>CUI Campus Timetable</h1>
+        </div>
+        <p class="sub">CUI Vehari — Timetable Portal</p>
+      </div>
+
+      <!-- ═══════════════════════════════ SECTION 1 — Search ═══════════════════════════════ -->
+      <div class="card">
+        <div class="card-title">📅 View Your Class Timetable</div>
+        <p class="card-sub">
+          Enter your class code to view and download your section's timetable.
+        </p>
+
+        <div class="input-row">
+          <input
+            id="class-code-input"
+            class="input-code"
+            type="text"
+            placeholder="e.g. BCS-FA22-8A"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="characters"
+            spellcheck="false"
+          />
+          <button
+            id="view-btn"
+            class="btn btn-green"
+            type="button"
+            onclick="viewTimetable()"
+          >
+            🔍 View Timetable
+          </button>
+          <button
+            class="btn btn-outline-cyan"
+            type="button"
+            onclick="downloadFull()"
+          >
+            📥 Download Full Timetable
+          </button>
+        </div>
+        <p class="hint">
+          If your class code has a suffix like (21), just ignore it and enter
+          only the main code.
+        </p>
+
+        <!-- Alerts -->
+        <div id="tt-alert" style="display: none"></div>
+
+        <!-- PDF viewer (shown on success) -->
+        <div class="pdf-viewer-wrap" id="pdf-viewer-section">
+          <div class="viewer-header">
+            <span class="viewer-label" id="viewer-label"
+              >📄 Timetable loaded</span
+            >
+            <button
+              id="download-class-btn"
+              class="btn btn-cyan"
+              type="button"
+              style="display: none"
+              onclick="downloadClassPDF()"
+            >
+              📥 Download My Class Timetable
+            </button>
+          </div>
+          <iframe
+            id="timetable-pdf-viewer"
+            src=""
+            style="
+              width: 100%;
+              height: 700px;
+              border: none;
+              border-radius: 8px;
+              background: #fff;
+            "
+            title="Class Timetable"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════ SECTION 2 — Notifications ═══════════════════════════════ -->
+      <div>
+        <p class="section-title">
+          🔔 University Notifications &amp; Datesheets
+        </p>
+        <div id="notifications-container">
+          <div class="empty-state">
+            <div class="icon">⏳</div>
+            Loading notifications…
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /page -->
+
+    <script>
+      // ─── helpers ───────────────────────────────────────────────
+      function escapeHTML(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(str || '')));
+        return d.innerHTML;
+      }
+
+      function normalizeClassCode(raw) {
+        return raw
+          .replace(/\s*\(.*?\)\s*/g, '')
+          .trim()
+          .toUpperCase();
+      }
+
+      function formatDate(iso) {
+        if (!iso) return '';
+        try {
+          return new Date(iso).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        } catch {
+          return iso;
+        }
+      }
+
+      function showAlert(html, type) {
+        /* type: error | warning | info */
+        const el = document.getElementById('tt-alert');
+        el.innerHTML = `<div class="alert alert-${type}">${html}</div>`;
+        el.style.display = 'block';
+      }
+      function clearAlert() {
+        const el = document.getElementById('tt-alert');
+        el.innerHTML = '';
+        el.style.display = 'none';
+      }
+
+      // ─── Stored download URL from last successful lookup ───────
+      let _downloadUrl = null;
+
+      // ─── View Timetable ────────────────────────────────────────
+      async function viewTimetable() {
+        clearAlert();
+        const raw = document.getElementById('class-code-input').value.trim();
+        if (!raw) {
+          showAlert('Please enter your class code.', 'error');
+          return;
+        }
+
+        const normalized = normalizeClassCode(raw);
+        if (!normalized) {
+          showAlert('Please enter a valid class code.', 'error');
+          return;
+        }
+
+        const viewBtn = document.getElementById('view-btn');
+        const dlBtn = document.getElementById('download-class-btn');
+        viewBtn.disabled = true;
+        viewBtn.innerHTML = '<span class="spinner"></span> Searching…';
+
+        // Hide previous viewer
+        const viewerSection = document.getElementById('pdf-viewer-section');
+        viewerSection.style.display = 'none';
+        dlBtn.style.display = 'none';
+        document.getElementById('timetable-pdf-viewer').src = '';
+        _downloadUrl = null;
+
+        try {
+          const res = await fetch('/api/timetable/lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ class_code: normalized }),
+          });
+
+          let data = {};
+          try {
+            data = await res.json();
+          } catch {}
+
+          if (!res.ok) {
+            const errMsg = data.error || '';
+            if (res.status === 404) {
+              if (
+                errMsg.toLowerCase().includes('no timetable has been uploaded')
+              ) {
+                showAlert(
+                  '⚠️ No timetable has been uploaded yet. Please check back later.',
+                  'warning',
+                );
+              } else {
+                showAlert(
+                  `❌ No timetable found for "<strong>${escapeHTML(normalized)}</strong>". Please check your class code.`,
+                  'error',
+                );
+              }
+            } else {
+              showAlert(`⚠️ Something went wrong. Please try again.`, 'error');
+            }
+            return;
+          }
+
+          // ── Success: use the returned URLs directly ─────────────
+          _downloadUrl = data.download_url;
+
+          // Set iframe src to the preview URL — browser renders PDF inline
+          document.getElementById('timetable-pdf-viewer').src = data.view_url;
+          document.getElementById('viewer-label').textContent =
+            `📄 Timetable: ${data.class_code}`;
+          viewerSection.style.display = 'block';
+          dlBtn.style.display = 'inline-flex';
+
+          // Scroll smoothly to the viewer
+          setTimeout(() => {
+            viewerSection.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            });
+          }, 200);
+        } catch (err) {
+          showAlert(`⚠️ Something went wrong. Please try again.`, 'error');
+        } finally {
+          viewBtn.disabled = false;
+          viewBtn.innerHTML = '🔍 View Timetable';
+        }
+      }
+
+      // Download My Class Timetable — uses stored URL, no extra API call
+      function downloadClassPDF() {
+        if (!_downloadUrl) return;
+        window.location.href = _downloadUrl;
+      }
+
+      // Download Full Timetable — always independent
+      function downloadFull() {
+        window.location.href = '/api/timetable/download/full';
+      }
+
+      // Enter key support
+      document.addEventListener('DOMContentLoaded', () => {
+        document
+          .getElementById('class-code-input')
+          .addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') viewTimetable();
+          });
+        loadNotifications();
+      });
+
+      // ─── Notifications ─────────────────────────────────────────
+      function badgeClass(type) {
+        const map = {
+          urgent: 'badge-urgent',
+          general: 'badge-general',
+          midterm: 'badge-midterm',
+          finalterm: 'badge-finalterm',
+          datesheet: 'badge-datesheet',
+          exam: 'badge-exam',
+        };
+        return map[type] || 'badge-general';
+      }
+
+      function badgeLabel(type) {
+        const map = {
+          urgent: '🚨 Urgent',
+          general: '📢 General',
+          midterm: '📝 Midterm',
+          finalterm: '📝 Final Term',
+          datesheet: '📋 Datesheet',
+          exam: '⚠️ Exam Alert',
+        };
+        return map[type] || type;
+      }
+
+      function cardTypeClass(type) {
+        const map = {
+          urgent: 'type-urgent',
+          general: 'type-general',
+          midterm: 'type-datesheet',
+          finalterm: 'type-datesheet',
+          datesheet: 'type-datesheet',
+          exam: 'type-exam',
+        };
+        return map[type] || 'type-general';
+      }
+
+      function renderAttachment(n) {
+        if (!n.attachment_type || !n.attachment_url) return '';
+        if (n.attachment_type === 'image') {
+          return `
+            <div class="notif-attachment">
+              <img
+                src="${escapeHTML(n.attachment_url)}"
+                alt="Attachment"
+                style="max-width:100%;max-height:220px;border-radius:8px;cursor:pointer;margin-top:.6rem;"
+                onclick="window.open('${escapeHTML(n.attachment_url)}','_blank')"
+                title="Click to open full size"
+              />
+            </div>`;
+        }
+        if (n.attachment_type === 'pdf') {
+          return `
+            <div class="notif-attachment" style="margin-top:.6rem;display:flex;align-items:center;gap:.5rem;">
+              <span style="font-size:1.3rem;">📄</span>
+              <a href="${escapeHTML(n.attachment_url)}" target="_blank"
+                 style="color:var(--cyan);font-size:.85rem;text-decoration:underline;">
+                ${escapeHTML(n.attachment_original_name || 'View PDF')}
+              </a>
+            </div>`;
+        }
+        if (n.attachment_type === 'docx') {
+          return `
+            <div class="notif-attachment" style="margin-top:.6rem;display:flex;align-items:center;gap:.5rem;">
+              <span style="font-size:1.3rem;">📝</span>
+              <a href="${escapeHTML(n.attachment_url)}" download
+                 style="color:var(--green);font-size:.85rem;text-decoration:underline;">
+                ${escapeHTML(n.attachment_original_name || 'Download DOCX')}
+              </a>
+            </div>`;
+        }
+        return '';
+      }
+
+      async function loadNotifications() {
+        const container = document.getElementById('notifications-container');
+        try {
+          const res = await fetch('/api/notifications');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const items = await res.json();
+
+          if (!Array.isArray(items) || items.length === 0) {
+            container.innerHTML = `
+              <div class="empty-state">
+                <div class="icon">🔕</div>
+                No announcements at the moment.
+              </div>`;
+            return;
+          }
+
+          container.innerHTML = items
+            .map(
+              (n) => `
+            <div class="notif-card ${cardTypeClass(n.type)}">
+              <span class="notif-badge ${badgeClass(n.type)}">${escapeHTML(badgeLabel(n.type))}</span>
+              <div class="notif-title">${escapeHTML(n.title)}</div>
+              <div class="notif-body">${escapeHTML(n.body)}</div>
+              ${renderAttachment(n)}
+              <div class="notif-date">${formatDate(n.created_at)}</div>
+            </div>
+          `,
+            )
+            .join('');
+        } catch (err) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">⚠️</div>
+              Failed to load notifications.
+            </div>`;
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin | Timetable & Notifications</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-950 text-white font-[Inter] min-h-screen p-6">
+    <div class="max-w-6xl mx-auto card rounded-xl p-6 bg-gray-900 border border-cyan-500/20">
+      <h2 class="text-2xl font-bold text-cyan-400 mb-6">
+        📢 Timetable & Notifications Management
+      </h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-gray-800/40 rounded-xl p-5">
+          <h3 class="text-lg font-semibold text-cyan-300 mb-4">
+            📅 Upload Full Timetable
+          </h3>
+
+          <input type="file" id="timetable-file" accept=".pdf" class="w-full mb-4" />
+
+          <button
+            onclick="uploadTimetable()"
+            class="px-5 py-3 bg-cyan-600 rounded-lg hover:bg-cyan-700"
+          >
+            Upload Timetable
+          </button>
+        </div>
+
+        <div class="bg-gray-800/40 rounded-xl p-5">
+          <h3 class="text-lg font-semibold text-cyan-300 mb-4">📢 Upload Notification</h3>
+
+          <input
+            type="text"
+            id="notification-title"
+            placeholder="Notification title"
+            class="w-full mb-3 px-4 py-2 bg-gray-700 rounded-lg"
+          />
+
+          <select id="notification-category" class="w-full mb-3 px-4 py-2 bg-gray-700 rounded-lg">
+            <option value="fee">Fee Notification</option>
+            <option value="semester_calendar">Semester Calendar</option>
+            <option value="mid_datesheet">Midterm Datesheet</option>
+            <option value="final_datesheet">Final Datesheet</option>
+            <option value="general">General Notice</option>
+          </select>
+
+          <input type="file" id="notification-file" accept=".pdf" class="w-full mb-4" />
+
+          <button
+            onclick="uploadNotification()"
+            class="px-5 py-3 bg-green-600 rounded-lg hover:bg-green-700"
+          >
+            Upload Notification
+          </button>
+        </div>
+      </div>
+
+      <p id="admin-message" class="mt-4 text-sm text-cyan-200"></p>
+    </div>
+
+    <script src="/static/js/admin_notifications.js"></script>
+  </body>
+</html>
+
