@@ -1,425 +1,428 @@
-# CUI Campus Chatbot
+# 🎓 CUI CampusBot
 
-A smart RAG (Retrieval-Augmented Generation) chatbot for COMSATS University Islamabad using FREE BAAI BGE embeddings and Perplexity API for generation.
+An AI-powered multilingual university assistant developed for COMSATS University Islamabad (Vehari Campus) using Retrieval-Augmented Generation (RAG), LangChain, MongoDB Atlas, ChromaDB, and modern authentication mechanisms.
 
-## 🌟 Features
+---
 
-- ✅ **FREE & Unlimited** - Uses BAAI BGE embeddings (no API quotas)
-- ✅ **Smart RAG System** - Retrieves relevant context before answering
-- ✅ **Beautiful UI** - Modern gradient design with Tailwind CSS
-- ✅ **Fast & Accurate** - Powered by Perplexity Sonar models
-- ✅ **247 Documents** - Covers academics, admissions, facilities, scholarships, timetables
+## 📌 Project Overview
 
-## 📋 Prerequisites
+CUI CampusBot is designed to assist students by providing instant access to university-related information through an intelligent chatbot interface.
 
-- Python 3.8 or higher
-- Perplexity API Key
-- ~200MB disk space for model and database
+The system retrieves information from uploaded university documents, timetables, policies, notices, and other academic resources using a RAG-based architecture.
 
-## 🚀 Quick Start
+Students can interact with the chatbot without creating an account, while administrators can securely manage the knowledge base, timetables, and notifications through a protected dashboard.
 
-### 1. Clone or Download the Project
+---
 
-```powershell
-cd "c:\Users\Fareed Bhatti\Desktop\CUI Campus bot"
+## ✨ Key Features
+
+### 🤖 AI-Powered Chatbot
+
+* Retrieval-Augmented Generation (RAG)
+* Context-aware responses
+* Accurate document-based answers
+* Hallucination reduction using document retrieval
+
+### 🌍 Multilingual Support
+
+* English
+* Urdu
+* Roman Urdu
+
+### 📚 Knowledge Base Management
+
+* PDF document upload
+* Automatic text extraction
+* Chunk generation
+* Embedding generation
+* Vector storage
+
+### 📅 Timetable Management
+
+* Admin uploads timetable PDFs
+* Automatic class code extraction
+* Student timetable lookup
+* Inline PDF viewing
+* Timetable downloads
+
+### 📢 Notifications System
+
+* Fee notifications
+* Semester calendar
+* Midterm datesheets
+* Final datesheets
+* General announcements
+
+### 🔐 Security Features
+
+* JWT Authentication
+* bcrypt Password Hashing
+* Role-Based Access Control (RBAC)
+* Invite-Based Admin Registration
+* Protected Admin Routes
+
+---
+
+## 🏗 System Architecture
+
+```text
+Admin Uploads Documents
+        │
+        ▼
+MongoDB GridFS
+        │
+        ▼
+Text Extraction
+        │
+        ▼
+RecursiveCharacterTextSplitter
+        │
+        ▼
+BAAI/bge-m3 Embeddings
+        │
+        ▼
+ChromaDB Vector Store
+        │
+        ▼
+Student Query
+        │
+        ▼
+Semantic Retrieval
+        │
+        ▼
+LangChain RAG Pipeline
+        │
+        ▼
+LLM Response Generation
+```
+
+---
+
+## 🧠 AI & RAG Pipeline
+
+### Document Processing Flow
+
+1. Admin uploads PDF
+2. PDF stored in MongoDB GridFS
+3. Text extracted from document
+4. Text preprocessing
+5. Chunk generation using RecursiveCharacterTextSplitter
+6. Embedding generation using BAAI/bge-m3
+7. Embeddings stored in ChromaDB
+
+### Query Processing Flow
+
+1. Student asks question
+2. Query embedding generated
+3. ChromaDB similarity search
+4. Relevant chunks retrieved
+5. LangChain combines context
+6. LLM generates final answer
+
+---
+
+## 🛠 Technology Stack
+
+### Backend
+
+* Python
+* Flask
+* FastAPI
+* Uvicorn
+
+### AI & NLP
+
+* LangChain
+* BAAI/bge-m3
+* Llama 3.3
+* RAG Architecture
+
+### Database
+
+* MongoDB Atlas
+* GridFS
+* ChromaDB
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
+* Tailwind CSS
+* Jinja2 Templates
+
+### Security
+
+* JWT Authentication
+* bcrypt Password Hashing
+* RBAC
+
+---
+
+## 📂 Project Structure
+
+```text
+CUI-CampusBot/
+│
+├── api/
+├── app/
+├── database/
+├── routes/
+├── security/
+├── services/
+├── static/
+├── templates/
+├── tests/
+│
+├── app.py
+├── config.py
+├── rag_pipeline.py
+├── embeddings.py
+├── vector_store.py
+│
+├── requirements.txt
+├── README.md
+└── .env.example
+```
+
+---
+
+## ⚙️ Installation
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/CUI-CampusBot.git
+cd CUI-CampusBot
 ```
 
 ### 2. Create Virtual Environment
 
-```powershell
+```bash
 python -m venv venv
-.\venv\Scripts\Activate.ps1
 ```
 
-### 3. Install Dependencies
+### 3. Activate Environment
 
-```powershell
+Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+Linux/Mac:
+
+```bash
+source venv/bin/activate
+```
+
+### 4. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Perplexity API Key
+Optional:
 
-Set your Perplexity API key in PowerShell:
-
-```powershell
-$env:PPLX_API_KEY = "pplx-..."
-$env:PPLX_MODEL = "sonar"   # optional: sonar | sonar-reasoning | sonar-pro | sonar-deep-research
+```bash
+pip install -r requirements_timetable.txt
 ```
 
-Or copy `.env.example` to `.env` and fill in `PPLX_API_KEY`.
+### 5. Configure Environment Variables
 
-### 5. Initialize Database
+Create `.env`
 
-```powershell
-python initialize_db.py
+```env
+MONGO_URI=your_mongodb_uri
+MONGODB_DB_NAME=cui_campusbot
+
+JWT_SECRET=your_secret
+
+GROQ_API_KEY=your_key
+GEMINI_API_KEY=your_key
+
+EMAIL_USERNAME=your_email
+EMAIL_PASSWORD=your_password
+
+EMBEDDING_MODEL=BAAI/bge-m3
 ```
 
-This will:
+### 6. Run Application
 
-- Load 247 documents from `cui_chatbot_data/`
-- Download BAAI BGE model (~130MB, one-time)
-- Create embeddings for all documents
-- Store in local ChromaDB database
-
-Expected output:
-
-```
-✓ Loaded 247 document chunks
-✓ Successfully added 247 documents
-✓ Retrieval test successful!
-🎉 Ready to start the chatbot!
-```
-
-### 6. Start the Web Application
-
-```powershell
+```bash
 python app.py
 ```
 
-If you set the API key after starting the app, you can hot-reload without a restart:
+---
 
-```powershell
-# In a new PowerShell, set key then call reload
-$env:PPLX_API_KEY = "pplx-..."; Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/reload
-```
+## 👨‍🎓 Student Features
 
-### 7. Open in Browser
+Students can:
 
-Navigate to: **http://localhost:5000**
-
-## 🎨 Web Interface
-
-### Features:
-
-- 💬 Interactive chat interface
-- 🎯 Suggested questions for quick start
-- 🔄 Typing indicators and smooth animations
-- 📚 Source/category badges (hidden by default)
-- 🗑️ Clear chat history
-- ⌨️ Keyboard shortcuts (Ctrl+K to focus input)
-
-### Try These Questions:
-
-- "What are the admission requirements?"
-- "Tell me about CUI scholarships"
-- "What facilities are available at CUI?"
-- "Show me the timetable information"
-
-## 📁 Project Structure
-
-```
-CUI Campus bot/
-├── app.py                      # Flask web server
-├── rag_pipeline_free.py        # RAG implementation (FREE embeddings)
-├── vector_store_free.py        # Vector database with BAAI BGE
-├── perplexity_llm.py           # Perplexity Chat Completions wrapper
-├── load_cui_data.py           # Data loader with chunking
-├── initialize_db.py           # Database setup script
-├── config.py                  # Configuration settings
-├── requirements.txt           # Python dependencies
-│
-├── templates/
-│   └── index.html             # Beautiful web interface
-│
-├── static/
-│   └── script.js              # Interactive frontend logic
-│
-├── cui_chatbot_data/          # Your data files (auto-discovered)
-│   ├── *.json                 # Any JSON Q&A files
-│   └── *.pdf                  # Any PDFs (e.g., Timetable.pdf)
-│
-├── chroma_db/                 # Vector database (auto-created)
-└── venv/                      # Virtual environment
-```
-
-## 🔧 API Endpoints
-
-### POST /api/chat
-
-Send a message to the chatbot
-
-**Request:**
-
-```json
-{
-  "message": "What are admission requirements?"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "answer": "The admission requirements include...",
-  "sources": ["admission.json"], // present; hidden in UI by default
-  "categories": ["Admission"]
-}
-```
-
-### POST /api/clear
-
-Clear chat history
-
-### GET /api/status
-
-Get system status
-
-### GET /api/suggestions
-
-### POST /api/reload
-
-Re-initialize the RAG pipeline (useful after setting `PPLX_API_KEY` without restarting the server).
-
-```powershell
-Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/reload
-```
-
-Get suggested questions
-
-## ⚙️ Configuration
-
-Environment variables used by the app (see `config.py`):
-
-- `PPLX_API_KEY`: Your Perplexity API key (required)
-- `PPLX_MODEL`: Perplexity model (default: `sonar`)
-- `DATA_DIRECTORY`: Data folder path (default: `cui_chatbot_data`)
-
-View active config:
-
-```powershell
-python config.py
-```
-
-## 🔍 How It Works
-
-### RAG Architecture:
-
-```
-User Query
-    ↓
-[BAAI BGE Embeddings] (FREE, local, unlimited)
-    ↓
-[ChromaDB Vector Search] (finds relevant documents)
-    ↓
-[Retrieve Top-K Documents]
-    ↓
-[Perplexity Sonar] (generates answer with context)
-    ↓
-Response to User
-```
-
-### Why BAAI BGE?
-
-- **FREE** - No API key needed for embeddings
-- **UNLIMITED** - No quotas or rate limits
-- **LOCAL** - Runs on your CPU
-- **HIGH QUALITY** - Top open-source model
-- **FAST** - After initial download (~130MB)
-
-### Why Perplexity?
-
-- **Strong models** - Sonar family optimized for knowledge tasks
-- **Simple API** - Chat Completions compatible
-- **Flexible** - Multiple model choices and temperatures
-
-## 🐛 Troubleshooting
-
-### Issue: "LLM not configured" or 503 on /api/chat
-
-**Cause:** `PPLX_API_KEY` not set. The app starts and the vector store initializes, but generation is disabled until the key is present.
-
-**Fix:**
-
-```powershell
-$env:PPLX_API_KEY = "pplx-..."; Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/reload
-```
-
-### Issue: "Module not found" errors
-
-**Solution:**
-
-```powershell
-pip install -r requirements.txt
-```
-
-### Issue: Database initialization fails
-
-**Solution:**
-
-```powershell
-# Delete old database
-Remove-Item -Recurse -Force chroma_db
-
-# Reinitialize
-python initialize_db.py
-```
-
-### Issue: Slow response times
-
-**Solution:**
-
-- First run downloads BAAI model (~130MB)
-- Subsequent runs are much faster
-- Embeddings are cached in database
-
-### Issue: Deprecation warnings
-
-**Solution:**
-
-```powershell
-pip install -U langchain-huggingface
-pip install -U langchain-chroma
-```
-
-## 📊 Technical Details
-
-### Embedding Model:
-
-- **Model:** BAAI/bge-small-en-v1.5
-- **Dimensions:** 384
-- **Size:** ~130MB
-- **Speed:** Fast on CPU
-- **Quality:** State-of-the-art for its size
-
-### LLM Model:
-
-- **Model:** Perplexity Sonar (configurable via `PPLX_MODEL`)
-- **Interface:** Chat Completions API
-- **Temperature:** 0.7 (balanced)
-
-### Vector Database:
-
-- **Engine:** ChromaDB
-- **Storage:** Persistent local disk
-- **Documents:** 247 chunks
-- **Search:** Cosine similarity
-
-### Text Processing:
-
-- **Strategy:** RecursiveCharacterTextSplitter
-- **Chunk Size:** 1000 characters
-- **Overlap:** 200 characters
-- **Retrieval:** Top-5 most relevant
-
-## 📝 Data Sources
-
-The chatbot has knowledge about:
-
-- ✅ Admission requirements and procedures
-- ✅ Academic programs and departments
-- ✅ University facilities and services
-- ✅ Scholarship opportunities
-- ✅ Class timetables
-- ✅ General university information
-
-## 🔐 Security Notes
-
-- Never commit your API key to version control
-- Prefer environment variables over hardcoding
-- The `.gitignore` file protects sensitive data
-
-## ☁️ MongoDB Atlas Storage Monitoring
-
-The admin dashboard includes real-time storage monitoring for MongoDB Atlas Free Tier (M0 cluster - 512MB limit).
-
-### Features
-
-- **Real-time Updates**: Storage usage updates every 30 seconds
-- **Visual Progress Bar**: Shows percentage of storage used
-- **Warning States**:
-  - 🟢 **Healthy** (< 75%): Green status, normal operation
-  - 🟡 **Warning** (75-89%): Yellow warning banner, consider cleanup
-  - 🔴 **Critical** (≥ 90%): Red alert, delete documents immediately
-
-### API Endpoint
-
-```
-GET /api/atlas-storage
-```
-
-Returns:
-
-```json
-{
-  "limitBytes": 536870912,
-  "usedBytes": 123456,
-  "leftBytes": 536747456,
-  "usedMB": 0.12,
-  "leftMB": 511.88,
-  "percentUsed": 0.02,
-  "status": "healthy",
-  "databasesChecked": ["cui_campusbot_db"],
-  "updatedAt": "2026-02-12T10:30:00.000Z"
-}
-```
-
-### Environment Variables
-
-| Variable          | Description                     | Required                            |
-| ----------------- | ------------------------------- | ----------------------------------- |
-| `MONGODB_URI`     | MongoDB Atlas connection string | Yes                                 |
-| `MONGODB_DB_NAME` | Database name (fallback)        | No (defaults to `cui_campusbot_db`) |
-
-### Storage Calculation
-
-Storage is calculated as: `usedBytes = dataSize + indexSize`
-
-This matches MongoDB Atlas M0 billing methodology where storage = documents + indexes.
-
-### Optional: Atlas Alerts
-
-To receive email alerts when storage is running low:
-
-1. Go to MongoDB Atlas → Project → Alerts
-2. Create new alert with condition: "Logical Size" approaching limit
-3. Set threshold: 400MB (78%) for warning, 460MB (90%) for critical
-4. Configure email notification
-
-## 🚀 Deployment (Optional)
-
-For a simple deployment on Windows, run with a process manager or use a production WSGI server compatible with your host. Ensure `PPLX_API_KEY` is set in the environment before starting the app.
-
-## 📈 Performance
-
-- **Database Init:** ~2-3 minutes (one-time)
-- **Query Response:** ~2-5 seconds
-- **Embedding Speed:** ~50 docs/second
-- **Memory Usage:** ~500MB with model loaded
-- **Disk Usage:** ~200MB (model + database)
-
-## 🤝 Contributing
-
-To add more data:
-
-1. Add any `.json` or `.pdf` files to `cui_chatbot_data/`
-2. Run: `python initialize_db.py`
-3. Reload: `Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/reload` (or restart)
-
-## 📄 License
-
-This project is for educational purposes.
-
-## 💡 Tips
-
-- Start with suggested questions to see how it works
-- Be specific in your questions for better answers
-- The bot maintains conversation context
-- Clear history if you want to start fresh
-- Check sources to verify information
-
-## 🎯 Next Steps
-
-1. ✅ Setup complete
-2. ✅ Database initialized
-3. 🚀 Start chatting at http://localhost:5000
-4. 🔑 Set `PPLX_API_KEY` and call `/api/reload` if needed
-5. 📚 Add more data as needed
-6. 🎨 Customize the UI in `templates/index.html`
-7. ⚙️ Adjust settings in `config.py`
+* Use chatbot without login
+* Ask questions in multiple languages
+* View timetable
+* Download timetable
+* View notifications
+* Download notifications
 
 ---
 
-**Made with ❤️ for COMSATS University Islamabad**
+## 👨‍💼 Admin Features
 
-Need help? Check the troubleshooting section or review the console output for detailed error messages.
+Admins can:
+
+* Upload university documents
+* Manage knowledge base
+* Upload timetable PDFs
+* Upload notifications
+* View feedback
+* Manage content
+
+---
+
+## 👑 Super Admin Features
+
+Super Admin can:
+
+* Invite new admins
+* Delete admins
+* Manage admin accounts
+* Control dashboard access
+
+---
+
+## 🔒 Security Implementation
+
+* JWT-based authentication
+* bcrypt password hashing
+* Role-based authorization
+* Protected dashboard routes
+* Secure password reset workflow
+* Invitation-based admin onboarding
+
+---
+
+## 🚀 Future Enhancements
+
+* Voice-enabled CampusBot
+* Multi-Agent Architecture
+* Personalized Student Assistant
+* Attendance Integration
+* LMS Integration
+* Mobile Application
+* AI Notification Summarization
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Home Page
+
+<img width="950" height="425" alt="home_page" src="https://github.com/user-attachments/assets/21a37374-4b1b-40f8-b859-9112af64d03f" />
+
+
+*Landing page of CUI CampusBot providing access to chatbot services and university resources.*
+
+---
+
+### 🔐 Admin Login
+<img width="957" height="439" alt="Login_Screen" src="https://github.com/user-attachments/assets/082ccc83-a1b3-42be-be96-0dc12126c9ca" />
+
+*Secure administrator login page protected with JWT authentication and bcrypt password hashing.*
+
+---
+
+### 🤖 Chat Interface
+
+<img width="950" height="440" alt="Chat_Interface_Screen" src="https://github.com/user-attachments/assets/7620b045-55a4-4b7d-bb8e-9c48a060fa8f" />
+
+
+*Multilingual AI chatbot interface supporting English, Urdu, and Roman Urdu queries using RAG architecture.*
+
+---
+
+### 💬 Student Feedback System
+
+<img width="953" height="438" alt="Feedback_Screen" src="https://github.com/user-attachments/assets/f34c499a-1fac-4f58-9bd9-cf65648bc698" />
+
+
+*Students can submit ratings and feedback to improve chatbot performance and user experience.*
+
+---
+
+### 📊 Admin Dashboard
+<img width="949" height="438" alt="Admin_Dashboard_Screen" src="https://github.com/user-attachments/assets/379e79da-2336-4234-aa32-93fce88efb0b" />
+
+
+*Central administration panel displaying system statistics, document counts, feedback, and management tools.*
+
+---
+
+### 📚 Knowledge Base Management
+
+<img width="946" height="440" alt="Admin_Dashboard_Screen Knowledge Base" src="https://github.com/user-attachments/assets/d856061c-deb2-4b52-9cac-33cd04b0205c" />
+
+
+*View, manage, and monitor all uploaded knowledge-base documents used by the RAG chatbot.*
+
+---
+
+### 📄 Document Upload System
+<img width="941" height="441" alt="Admin_Dashboard_Screen Document Uploading" src="https://github.com/user-attachments/assets/5230f4ee-effd-405d-9a50-bdec8c636ed0" />
+
+
+*Upload university documents to MongoDB GridFS for automated text extraction, chunking, and embedding generation.*
+
+---
+
+### 💭 Feedback Management
+
+<img width="941" height="445" alt="Admin_Dashboard_Screen Feedback" src="https://github.com/user-attachments/assets/2f349318-2dd7-45b6-b1ca-6c982298a3df" />
+
+
+*Admin interface for reviewing and analyzing student feedback and chatbot ratings.*
+
+---
+
+### 📅 Timetable Upload Management
+
+<img width="664" height="451" alt="Admin_Dashboard_Screen Timetable uploading" src="https://github.com/user-attachments/assets/0d284e18-8acc-4022-b416-9a70cf12680b" />
+
+
+*Upload centralized university timetable PDFs and automatically extract available class codes.*
+
+---
+
+### 📢 Notification Upload Management
+
+<img width="616" height="446" alt="Admin_Dashboard_Screen Notificaiton uploading" src="https://github.com/user-attachments/assets/62fc2844-2869-48aa-b548-134def4c1309" />
+
+
+*Upload fee notices, semester calendars, datesheets, and other university announcements.*
+
+---
+
+
+### 📋 Timetable & Notifications Viewer
+
+<img width="332" height="455" alt="timetable  and notifiction view" src="https://github.com/user-attachments/assets/f69f7087-e3e5-45d5-b4aa-71b564dca19f" />
+
+
+*Unified student portal for viewing timetables, academic notifications, and downloadable resources.*
+
+
+## 👨‍💻 Developer
+
+**Fareed Anwar (FA22-BCS-099)**
+**Hammad Asjad (FA22-BCS-126)**
+
+Final Year Project
+
+COMSATS University Islamabad – Vehari Campus
+
+---
+
+## 📄 License
+
+This project is developed for educational and research purposes.
